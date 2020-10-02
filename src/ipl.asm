@@ -26,11 +26,17 @@ jmp Entry
         DD      0                ; 不使用分区，必须是0
         DD      2880             ; 重写一次磁盘大小
 
-; FAT16 BPB 扩展
-        DB      0,0,0x29         ; 意义不明（固定）
-        DD      0xffffffff       ; （可能是）卷标号码
-        DB      "CLOUD - OS "    ; 磁盘的名称（必须为11字节，不足填空格）
-        DB      "FAT12   "       ; 磁盘格式名称（必须是8字节，不足填空格）
+; 用于 LBA 模式读取磁盘数据的数据包
+DAPACK:
+        db      0x10            ; 该包大小
+        db      0
+BlkCnt:	dw      0               ; 要读取的区块数。INT 13 指令会将这个值重置为实际读取的区块数。
+DstMem:	dw      0               ; 目标内存地址
+        dw      0               ; 内存页
+OrgLBA: dd      0               ; 要读取的 logical block address，48位里的低32位
+        dd      0               ; 要读取的 logical block address, 48位里的高32位
+
+
 
 Entry:
 
@@ -45,8 +51,32 @@ Entry:
         MOV     SI, szLoadingKernel
         CALL    PutString
 
-        JMP     bootfin
 
+
+; 读取 FAT12 的 FAT表 和 根目录
+
+        ; FAT表有两张（互为备份），每个9扇区，共占18扇区（往上翻，BIOS parameter block里都写着）
+        ; 根目录区有 224 个 Entry，每个 Entry 32 字节，共 7168 字节也就是 14 个扇区 （往上翻，BIOS parameter block里都写着）
+
+        ; 所以，要完整读入 FAT表 两张以及根目录，需要 32 个扇区
+        ; 我们把这些内容全部读进 0x7e00开始的地方
+        
+        MOV     WORD    [BlkCnt], 32
+        MOV     WORD    [DstMem], 0x7e00
+        MOV     DWORD   [OrgLBA], 1
+
+        ; TODO: 将 AH 设为 0x41 调用 INT 13 以检查 LBA 是否启用
+
+        MOV     SI, DAPACK      ; address of "disk address packet"
+        mov     AH, 0x42        ; AL is unused
+        mov     DL, 0x80        ; drive number 0 (OR the drive # with 0x80)
+        INT     0x13
+
+        ; TODO: 检查实际读取的扇区数量
+        
+        ; TODO: 在 FAT 文件系统中寻找文件 boot.bin 并且读入内存 0xbe00，然后跳转过去
+        
+        JMP bootfin
 
 PutString:
 ; 显示一个字符串并返回。字符串地址存在 SI 中。
@@ -71,7 +101,7 @@ bootfin:
 szLoadingKernel:
         DB        0x0a, 0x0a        ; 换行两次
         DB        "Loading kernel file..."
-        DB        0x0d 0x0a         ; CRLF 换行
+        DB        0x0d, 0x0a         ; CRLF 换行
         DB        0
 
         times     510-($-$$)    DB    00
