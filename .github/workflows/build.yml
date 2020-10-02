@@ -26,3 +26,8 @@ jobs:
       - name: build CloudOS image
         run: |
           cmd /C "make"
+      - name: upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: upload artifacts
+          path: .\bin\cloudos.img
