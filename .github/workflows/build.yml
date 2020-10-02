@@ -29,5 +29,5 @@ jobs:
       - name: upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: upload artifacts
+          name: CloudOS
           path: .\bin\cloudos.img
