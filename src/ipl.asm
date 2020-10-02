@@ -25,6 +25,8 @@ jmp Entry
         DW      2                ; 磁头数（必须是2）
         DD      0                ; 不使用分区，必须是0
         DD      2880             ; 重写一次磁盘大小
+
+; FAT16 BPB 扩展
         DB      0,0,0x29         ; 意义不明（固定）
         DD      0xffffffff       ; （可能是）卷标号码
         DB      "CLOUD - OS "    ; 磁盘的名称（必须为11字节，不足填空格）
@@ -75,10 +77,3 @@ szLoadingKernel:
         times     510-($-$$)    DB    00
 
         DB        0x55, 0xaa
-
-; 启动扇区以外部分输出
-
-        DB      0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
-        TIMES   4600    DB  0
-        DB      0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
-        TIMES   1469432 DB  0
