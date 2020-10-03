@@ -17,3 +17,7 @@ default : ./bin/cloudos.img
 ./bin/boot.bin : ./src/boot.asm
 	cmd /C if not exist bin md bin
 	$(NASM) ./src/boot.asm -o ./bin/boot.bin
+
+.PHONY: clean
+clean:
+	del /Q /S .\bin
