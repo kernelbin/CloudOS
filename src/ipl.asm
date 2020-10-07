@@ -27,14 +27,14 @@ jmp Entry
         DD      2880             ; 重写一次磁盘大小
 
 ; 用于 LBA 模式读取磁盘数据的数据包
-DAPACK:
-        db      0x10            ; 该包大小
-        db      0
-BlkCnt:	dw      0               ; 要读取的区块数。INT 13 指令会将这个值重置为实际读取的区块数。
-DstMem:	dw      0               ; 目标内存地址
-        dw      0               ; 内存页
-OrgLBA: dd      0               ; 要读取的 logical block address，48位里的低32位
-        dd      0               ; 要读取的 logical block address, 48位里的高32位
+DataPack:
+        DB      0x10            ; 该包大小
+        DB      0
+BlkCnt:	DW      0               ; 要读取的区块数。INT 13 指令会将这个值重置为实际读取的区块数。
+DstMem:	DW      0               ; 目标内存地址
+        DW      0               ; 内存页
+OrgLBA: DD      0               ; 要读取的 logical block address，48位里的低32位
+        DD      0               ; 要读取的 logical block address, 48位里的高32位
 
 
 
@@ -67,7 +67,7 @@ Entry:
 
         ; TODO: 将 AH 设为 0x41 调用 INT 13 以检查 LBA 是否启用
 
-        MOV     SI, DAPACK      ; address of "disk address packet"
+        MOV     SI, DataPack      ; address of "disk address packet"
         mov     AH, 0x42        ; AL is unused
         mov     DL, 0x80        ; drive number 0 (OR the drive # with 0x80)
         INT     0x13
@@ -76,34 +76,34 @@ Entry:
         
         ; TODO: 在 FAT 文件系统中寻找文件 boot.bin 并且读入内存 0xbe00，然后跳转过去
         
-        JMP bootfin
+        JMP Bootfin
 
 PutString:
 ; 显示一个字符串并返回。字符串地址存在 SI 中。
         MOV     AL,[SI]
         ADD     SI,1        ; SI 自增 1
         CMP     AL,0
-        JNE     putloop_continue
+        JNE     PutloopContinue
         RET 
-putloop_continue:
+PutloopContinue:
         MOV     AH,0x0e     ; 显示字符
         MOV     BX,15       ; 文本颜色
         INT     0x10        ; 调用 BIOS 显示
         JMP     PutString
 
-bootfin:
+Bootfin:
 		HLT						
-		JMP		bootfin				; 无限循环
+		JMP		Bootfin				; 无限循环
 
 
 ; 字符串定义
 
 szLoadingKernel:
-        DB        0x0a, 0x0a        ; 换行两次
-        DB        "Loading kernel file..."
-        DB        0x0d, 0x0a         ; CRLF 换行
-        DB        0
-
-        times     510-($-$$)    DB    00
+        DB      0x0a, 0x0a        ; 换行两次
+        DB      "Loading kernel file..."
+        DB      0x0d, 0x0a         ; CRLF 换行
+        DB      0
+        
+        TIMES   510-($-$$)    DB      0
 
         DB        0x55, 0xaa
