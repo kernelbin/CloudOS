@@ -1,6 +1,7 @@
 ; ipl.asm     inital program loader
 ; Copyright (c) He yang 2020 (1160386205@qq.com)
 
+%include "fat12def.inc"
 
 org 0x7c00
 jmp Entry
@@ -62,8 +63,8 @@ Entry:
         ; 我们把这些内容全部读进 0x7e00开始的地方
         
         MOV     WORD    [BlkCnt], 32
-        MOV     WORD    [DstMem], 0x7e00
-        MOV     DWORD   [OrgLBA], 1
+        MOV     WORD    [DstMem], 0x7e00      ; 内存中 0x7c00 - 0x7dff 被 ipl 占据。从 0x7e00 开始放置
+        MOV     DWORD   [OrgLBA], 1           ; 磁盘里第一个 block 就是 ipl 没必要再读。
 
         ; TODO: 将 AH 设为 0x41 调用 INT 13 以检查 LBA 是否启用
 
@@ -76,7 +77,46 @@ Entry:
         
         ; TODO: 在 FAT 文件系统中寻找文件 boot.bin 并且读入内存 0xbe00，然后跳转过去
         
-        JMP Bootfin
+        ; 磁盘里的内容被我们读进了 0x7e00 开始的内存，加上 FAT 表两张 9*2*512，所以目录表在 0xa200 
+        MOV     SI, 0xa200
+        MOV     CX, 0
+
+FindBootBinLoop:
+
+        CMP     CX, 224     ; 总共 224 个目录
+        JE      FailedFindBootBin
+
+        ; 文件名和扩展名正好是前 11 个字节。逐个比较。
+        ; TODO: 跳过空目录项。
+        MOV     BX, 0
+        JMP     CmpFileName
+
+CmpNextChar:
+        ADD     BX, 1
+
+CmpFileName:
+
+        CMP     BX, 11
+        JE      BootBinFinded
+        MOV     DX, [SI + BX]
+        CMP     DX, [szBootBinFileName + BX]
+        
+        JE      CmpNextChar
+
+        ; 文件名并不一致。跳过。
+        ADD     CX, 1
+        ADD     SI, FAT12_DIR_ENTRY_size
+        JMP     FindBootBinLoop
+
+BootBinFinded:
+        JMP     Bootfin
+
+FailedFindBootBin:
+        
+        MOV     SI, szFailedFindBootBin
+        CALL    PutString
+
+        JMP     Bootfin
 
 PutString:
 ; 显示一个字符串并返回。字符串地址存在 SI 中。
@@ -103,7 +143,20 @@ szLoadingKernel:
         DB      "Loading kernel file..."
         DB      0x0d, 0x0a         ; CRLF 换行
         DB      0
-        
+
+szFailedFindBootBin: 
+        DB      0x0a, 0x0a        ; 换行两次
+        DB      "Failed to find BOOT.BIN"
+        DB      0x0d, 0x0a         ; CRLF 换行
+        DB      "CloudOS failed to boot."
+        DB      0
+
+
+szBootBinFileName:
+        DB      "BOOT    BIN"
+        DB      0
+
+
         TIMES   510-($-$$)    DB      0
 
         DB        0x55, 0xaa
