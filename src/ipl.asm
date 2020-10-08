@@ -87,7 +87,7 @@ FindBootBinLoop:
         JE      FailedFindBootBin
 
         ; 文件名和扩展名正好是前 11 个字节。逐个比较。
-        ; TODO: 跳过空目录项。
+        ; TODO: 跳过空目录项，以及长文件名。
         MOV     BX, 0
         JMP     CmpFileName
 
@@ -109,6 +109,7 @@ CmpFileName:
         JMP     FindBootBinLoop
 
 BootBinFound:
+
         JMP     Bootfin
 
 FailedFindBootBin:
