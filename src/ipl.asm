@@ -3,8 +3,8 @@
 
 %include "fat12def.inc"
 
-org 0x7c00
-jmp Entry
+ORG     0x7c00
+JMP     Entry
 
 ; 标准FAT12格式软盘专用的代码 Stand FAT12 format floppy code
 
@@ -31,8 +31,8 @@ jmp Entry
 DataPack:
         DB      0x10            ; 该包大小
         DB      0
-BlkCnt:	DW      0               ; 要读取的区块数。INT 13 指令会将这个值重置为实际读取的区块数。
-DstMem:	DW      0               ; 目标内存地址
+BlkCnt: DW      0               ; 要读取的区块数。INT 13 指令会将这个值重置为实际读取的区块数。
+DstMem: DW      0               ; 目标内存地址
         DW      0               ; 内存页
 OrgLBA: DD      0               ; 要读取的 logical block address，48位里的低32位
         DD      0               ; 要读取的 logical block address, 48位里的高32位
@@ -69,8 +69,8 @@ Entry:
         ; TODO: 将 AH 设为 0x41 调用 INT 13 以检查 LBA 是否启用
 
         MOV     SI, DataPack      ; address of "disk address packet"
-        mov     AH, 0x42        ; AL is unused
-        mov     DL, 0x80        ; drive number 0 (OR the drive # with 0x80)
+        MOV     AH, 0x42        ; AL is unused
+        MOV     DL, 0x80        ; drive number 0 (OR the drive # with 0x80)
         INT     0x13
 
         ; TODO: 检查实际读取的扇区数量
@@ -97,7 +97,7 @@ CmpNextChar:
 CmpFileName:
 
         CMP     BX, 11
-        JE      BootBinFinded
+        JE      BootBinFound
         MOV     DX, [SI + BX]
         CMP     DX, [szBootBinFileName + BX]
         
@@ -108,7 +108,7 @@ CmpFileName:
         ADD     SI, FAT12_DIR_ENTRY_size
         JMP     FindBootBinLoop
 
-BootBinFinded:
+BootBinFound:
         JMP     Bootfin
 
 FailedFindBootBin:
@@ -124,7 +124,7 @@ PutString:
         ADD     SI,1        ; SI 自增 1
         CMP     AL,0
         JNE     PutloopContinue
-        RET 
+        RET
 PutloopContinue:
         MOV     AH,0x0e     ; 显示字符
         MOV     BX,15       ; 文本颜色
@@ -132,8 +132,8 @@ PutloopContinue:
         JMP     PutString
 
 Bootfin:
-		HLT						
-		JMP		Bootfin				; 无限循环
+        HLT
+        JMP     Bootfin     ; 无限循环
 
 
 ; 字符串定义
