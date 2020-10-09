@@ -110,7 +110,56 @@ CmpFileName:
 
 BootBinFound:
 
-        JMP     Bootfin
+        ; 枚举FAT表，将文件读入
+        MOV     WORD    CX, [SI + FAT12_DIR_ENTRY.FirstCulster]
+        
+        ; 加 33 - 2 （加 31）得到扇区号
+        ; 33 是因为IPL、MBR、FAT1、FAT2、根目录占了33个扇区
+        ; 2 是因为 0, 1 号在FAT表里是没被用的
+        ; 将这个扇区读入指定地址，然后找下一个扇区
+
+
+        MOV     WORD    [BlkCnt], 1           ; 始终一个扇区一个扇区读取
+
+        MOV     DI, 0xbe00 ; 存目标读取地址
+
+ReadCluster:
+        CMP     CX, 0xFF6
+        ; TODO: 分类处理遇到坏簇，无效簇号等情况
+        
+        JA      0xbe00
+
+        MOV     WORD    [DstMem], DI
+        MOV     WORD    [OrgLBA], CX ; 没 DWORD 寄存器。反正小端不影响所以用了WORD
+        ADD     DWORD   [OrgLBA], 31
+
+        MOV     SI, DataPack      ; address of "disk address packet"
+        MOV     AH, 0x42        ; AL is unused
+        MOV     DL, 0x80        ; drive number 0 (OR the drive # with 0x80)
+        INT     0x13
+        ; TODO: 校验是否读取成功
+
+        ; 在 FAT 表中找到下一个簇号
+        MOV     BX, CX
+        SHR     BX, 1
+        ADD     BX, CX
+
+        AND     CX, 1
+        
+        JNZ     OddCluster
+        MOV     WORD    CX, [0x7e00 + BX]
+        AND     CX, 0x0fff
+
+        ADD     DI, 0x0200
+        JMP     ReadCluster
+
+OddCluster:
+        MOV     WORD    CX, [0x7e00 + BX]
+        SHR     CX, 4
+
+        ADD     DI, 0x0200
+        JMP     ReadCluster
+
 
 FailedFindBootBin:
         
