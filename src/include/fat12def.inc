@@ -9,7 +9,7 @@ STRUC   FAT12_DIR_ENTRY
     .Reserved       RESB    10
     .CreationTime   RESW    1
     .CreationDate   RESW    1
-    .FirstCulster   RESW    1
+    .FirstCluster   RESW    1
     .FileSize       RESD    1
 
 ENDSTRUC

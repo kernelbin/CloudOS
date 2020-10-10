@@ -67,7 +67,8 @@ Entry:
 
         MOV     SI, szLBANotSupported
         CALL    PutString
-        JMP     Bootfin
+
+        JMP     BootFailed
 
 LBASupported:
         ; FAT表有两张（互为备份），每个9扇区，共占18扇区（往上翻，BIOS parameter block里都写着）
@@ -123,7 +124,7 @@ CmpFileName:
 BootBinFound:
 
         ; 枚举FAT表，将文件读入
-        MOV     WORD    CX, [SI + FAT12_DIR_ENTRY.FirstCulster]
+        MOV     WORD    CX, [SI + FAT12_DIR_ENTRY.FirstCluster]
         
         ; 将这个扇区读入指定地址，然后找下一个扇区
 
@@ -133,7 +134,26 @@ BootBinFound:
         MOV     DI, 0xbe00 ; 存目标读取地址
 
 ReadCluster:
-        CMP     CX, 0xff6
+
+        CMP     CX, 0xff8
+        ; 这应该是文件最后一个簇。
+        JNB     0xbe00
+
+        CMP     CX, 0xff7
+        ; 坏簇
+        JNB     BadCluster
+
+        CMP     CX, 0xff0
+        ; 保留值
+        JNB     InterruptedFileSystem
+
+        CMP     CX, 0x002
+        ; 正常簇号，继续执行。
+        
+        ; 空闲簇/保留簇
+        JB      InterruptedFileSystem
+
+
         ; TODO: 分类处理遇到坏簇，无效簇号等情况
 
         JA      0xbe00
@@ -179,13 +199,25 @@ FailedFindBootBin:
         MOV     SI, szFailedFindBootBin
         CALL    PutString
 
-        JMP     Bootfin
+        JMP     BootFailed
+
+BadCluster:
+        MOV     SI, szEncounterBadCluster
+        CALL    PutString
+
+        JMP     BootFailed
+
+InterruptedFileSystem:
+        MOV     SI, szInterruptedFileSystem
+        CALL    PutString
+
+        JMP     BootFailed
 
 PutString:
 ; 显示一个字符串并返回。字符串地址存在 SI 中。
-        MOV     AL,[SI]
-        ADD     SI,1        ; SI 自增 1
-        CMP     AL,0
+        MOV     AL, [SI]
+        ADD     SI, 1        ; SI 自增 1
+        CMP     AL, 0
         JNE     PutloopContinue
         RET
 PutloopContinue:
@@ -194,9 +226,12 @@ PutloopContinue:
         INT     0x10        ; 调用 BIOS 显示
         JMP     PutString
 
-Bootfin:
+BootFailed:
+        MOV     SI, szOSFailedBoot
+        CALL    PutString
+BootFailedLoop:
         HLT
-        JMP     Bootfin     ; 无限循环
+        JMP     BootFailedLoop     ; 无限循环
 
 
 ; 字符串定义
@@ -211,13 +246,27 @@ szFailedFindBootBin:
         DB      0x0a, 0x0a        ; 换行两次
         DB      "Failed to find BOOT.BIN"
         DB      0x0d, 0x0a         ; CRLF 换行
-        DB      "CloudOS failed to boot."
         DB      0
 
 szLBANotSupported:
         DB      0x0a, 0x0a        ; 换行两次
-        DB      "LBA in Extended Mode not supported."
+        DB      "LBA not supported."
         DB      0x0d, 0x0a         ; CRLF 换行
+        DB      0
+
+szEncounterBadCluster:
+        DB      0x0a, 0x0a        ; 换行两次
+        DB      "Encountered bad cluster when booting."
+        DB      0x0d, 0x0a         ; CRLF 换行
+        DB      0
+
+szInterruptedFileSystem:
+        DB      0x0a, 0x0a        ; 换行两次
+        DB      "Filesystem is interrupted."
+        DB      0x0d, 0x0a         ; CRLF 换行
+        DB      0
+
+szOSFailedBoot:
         DB      "CloudOS failed to boot."
         DB      0
 
