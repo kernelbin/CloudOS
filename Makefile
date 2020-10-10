@@ -8,11 +8,11 @@ default : ./bin/cloudos.img
 
 ./bin/cloudos.img : ./bin/ipl.bin ./bin/boot.bin
 	$(FATIMG) -c -F -f ./bin/cloudos.img -s ./bin/ipl.bin
-	$(FATIMG) -m -F -f ./bin/cloudos.img -i ./bin/boot.bin -n boot.bin
+	$(FATIMG) -m -F -f ./bin/cloudos.img -i ./bin/boot.bin -n BOOT.BIN
 
 ./bin/ipl.bin : ./src/ipl.asm
 	cmd /C if not exist bin md bin
-	$(NASM) ./src/ipl.asm -o ./bin/ipl.bin
+	$(NASM) -i./src/include/ ./src/ipl.asm -o ./bin/ipl.bin
 
 ./bin/boot.bin : ./src/boot.asm
 	cmd /C if not exist bin md bin
