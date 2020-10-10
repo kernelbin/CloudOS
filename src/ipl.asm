@@ -56,6 +56,20 @@ Entry:
 
 ; 读取 FAT12 的 FAT表 和 根目录
 
+        ; 检查 INT13h 扩展是否支持
+
+        MOV     AH, 0x41
+        MOV     BX, 0x55aa
+        MOV     DL, 0x80
+        INT     0x13
+
+        JNC     LBASupported
+
+        MOV     SI, szLBANotSupported
+        CALL    PutString
+        JMP     Bootfin
+
+LBASupported:
         ; FAT表有两张（互为备份），每个9扇区，共占18扇区（往上翻，BIOS parameter block里都写着）
         ; 根目录区有 224 个 Entry，每个 Entry 32 字节，共 7168 字节也就是 14 个扇区 （往上翻，BIOS parameter block里都写着）
 
@@ -74,8 +88,6 @@ Entry:
         INT     0x13
 
         ; TODO: 检查实际读取的扇区数量
-        
-        ; TODO: 在 FAT 文件系统中寻找文件 boot.bin 并且读入内存 0xbe00，然后跳转过去
         
         ; 磁盘里的内容被我们读进了 0x7e00 开始的内存，加上 FAT 表两张 9*2*512，所以目录表在 0xa200 
         MOV     SI, 0xa200
@@ -113,9 +125,6 @@ BootBinFound:
         ; 枚举FAT表，将文件读入
         MOV     WORD    CX, [SI + FAT12_DIR_ENTRY.FirstCulster]
         
-        ; 加 33 - 2 （加 31）得到扇区号
-        ; 33 是因为IPL、MBR、FAT1、FAT2、根目录占了33个扇区
-        ; 2 是因为 0, 1 号在FAT表里是没被用的
         ; 将这个扇区读入指定地址，然后找下一个扇区
 
 
@@ -130,12 +139,16 @@ ReadCluster:
         JA      0xbe00
 
         MOV     WORD    [DstMem], DI
-        MOV     WORD    [OrgLBA], CX ; 没 DWORD 寄存器。反正小端不影响所以用了WORD
+
+        ; 加 33 - 2 （加 31）得到实际扇区号
+        ; 33 是因为IPL、MBR、FAT1、FAT2、根目录占了33个扇区
+        ; 2 是因为 0, 1 号在FAT表里是没被用的
+        MOV     WORD    [OrgLBA], CX    ; 没 DWORD 寄存器。反正小端不影响所以用了WORD
         ADD     DWORD   [OrgLBA], 31
 
-        MOV     SI, DataPack      ; address of "disk address packet"
-        MOV     AH, 0x42        ; AL is unused
-        MOV     DL, 0x80        ; drive number 0 (OR the drive # with 0x80)
+        MOV     SI, DataPack            ; address of "disk address packet"
+        MOV     AH, 0x42                ; AL is unused
+        MOV     DL, 0x80                ; drive number 0 (OR the drive # with 0x80)
         INT     0x13
         ; TODO: 校验是否读取成功
 
@@ -201,6 +214,12 @@ szFailedFindBootBin:
         DB      "CloudOS failed to boot."
         DB      0
 
+szLBANotSupported:
+        DB      0x0a, 0x0a        ; 换行两次
+        DB      "LBA in Extended Mode not supported."
+        DB      0x0d, 0x0a         ; CRLF 换行
+        DB      "CloudOS failed to boot."
+        DB      0
 
 szBootBinFileName:
         DB      "BOOT    BIN"
