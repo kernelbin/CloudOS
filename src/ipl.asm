@@ -124,9 +124,9 @@ BootBinFound:
         MOV     DI, 0xbe00 ; 存目标读取地址
 
 ReadCluster:
-        CMP     CX, 0xFF6
+        CMP     CX, 0xff6
         ; TODO: 分类处理遇到坏簇，无效簇号等情况
-        
+
         JA      0xbe00
 
         MOV     WORD    [DstMem], DI
