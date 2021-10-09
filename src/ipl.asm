@@ -1,4 +1,4 @@
-; ipl.asm     inital program loader
+; ipl.asm       inital program loader
 ; Copyright (c) He yang 2020 (1160386205@qq.com)
 
 %include "fat12def.inc"
