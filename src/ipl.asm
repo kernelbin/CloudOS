@@ -5,10 +5,8 @@
 
 ORG     0x7c00
 JMP     Entry
-
+NOP
 ; 标准FAT12格式软盘专用的代码 Stand FAT12 format floppy code
-
-        DB      0x90
         
 ; 有关这段 BIOS parameter block
 ; 更多信息详见 https://wiki.osdev.org/FAT
@@ -32,7 +30,7 @@ JMP     Entry
         DB      0x29             ; 扩展引导标记，必须是 0x28 或者 0x29
         DD      0x00             ; 卷系列号
         DB      "CLOUDOS_FAT"    ; 卷标，11byte
-        DB      "FAT12", 0, 0, 0 ; 分区文件系统类型名,8 byte
+        DB      "FAT12   "       ; 分区文件系统类型名,8 byte
 
 ; 用于 LBA 模式读取磁盘数据的数据包
 DataPack:
