@@ -20,7 +20,7 @@ PutloopContinue:
 
 szLoadSuccess:
         DB      0x0a, 0x0a        ; 换行两次
-        DB      "lol"
+        DB      "hello"
         DB      0x0d, 0x0a         ; CRLF 换行
         DB      0
 

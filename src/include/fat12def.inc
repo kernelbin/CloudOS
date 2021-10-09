@@ -13,4 +13,3 @@ STRUC   FAT12_DIR_ENTRY
     .FileSize       RESD    1
 
 ENDSTRUC
-    
