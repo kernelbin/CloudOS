@@ -27,6 +27,13 @@ JMP     Entry
         DD      0                ; 不使用分区，必须是0
         DD      2880             ; 重写一次磁盘大小
 
+        DB      0x00             ; 中断13的驱动器号
+        DB      0x00             ; Windows NT 会使用，否则保留
+        DB      0x29             ; 扩展引导标记，必须是 0x28 或者 0x29
+        DD      0x00             ; 卷系列号
+        DB      "CLOUDOS_FAT"    ; 卷标，11byte
+        DB      "FAT12", 0, 0, 0 ; 分区文件系统类型名,8 byte
+
 ; 用于 LBA 模式读取磁盘数据的数据包
 DataPack:
         DB      0x10            ; 该包大小
@@ -43,16 +50,10 @@ Entry:
 
 ; 程序主体
 
-        MOV     AX, 0               ; 寄存器初始化
+        XOR     AX, AX               ; 寄存器初始化
         MOV     SS, AX
         MOV     DS, AX
         MOV     SP, 0x7c00
-
-        ; 输出 szLoadingKernel 在屏幕上
-        MOV     SI, szLoadingKernel
-        CALL    PutString
-
-
 
 ; 读取 FAT12 的 FAT表 和 根目录
 
@@ -83,7 +84,7 @@ LBASupported:
 
         ; TODO: 将 AH 设为 0x41 调用 INT 13 以检查 LBA 是否启用
 
-        MOV     SI, DataPack      ; address of "disk address packet"
+        MOV     SI, DataPack    ; address of "disk address packet"
         MOV     AH, 0x42        ; AL is unused
         MOV     DL, 0x80        ; drive number 0 (OR the drive # with 0x80)
         INT     0x13
@@ -92,7 +93,7 @@ LBASupported:
         
         ; 磁盘里的内容被我们读进了 0x7e00 开始的内存，加上 FAT 表两张 9*2*512，所以目录表在 0xa200 
         MOV     SI, 0xa200
-        MOV     CX, 0
+        XOR     CX, CX
 
 FindBootBinLoop:
 
@@ -101,11 +102,11 @@ FindBootBinLoop:
 
         ; 文件名和扩展名正好是前 11 个字节。逐个比较。
         ; TODO: 跳过空目录项，以及长文件名。
-        MOV     BX, 0
+        XOR     BX, BX
         JMP     CmpFileName
 
 CmpNextChar:
-        ADD     BX, 1
+        INC     BX
 
 CmpFileName:
 
@@ -117,7 +118,7 @@ CmpFileName:
         JE      CmpNextChar
 
         ; 文件名并不一致。跳过。
-        ADD     CX, 1
+        INC     CX
         ADD     SI, FAT12_DIR_ENTRY_size
         JMP     FindBootBinLoop
 
@@ -177,7 +178,7 @@ ReadCluster:
         SHR     BX, 1
         ADD     BX, CX
 
-        AND     CX, 1
+        INC     CX
         
         JNZ     OddCluster
         MOV     WORD    CX, [0x7e00 + BX]
@@ -202,7 +203,7 @@ FailedFindBootBin:
         JMP     BootFailed
 
 BadCluster:
-        MOV     SI, szEncounterBadCluster
+        MOV     SI, szFoundBadCluster
         CALL    PutString
 
         JMP     BootFailed
@@ -216,7 +217,7 @@ InterruptedFileSystem:
 PutString:
 ; 显示一个字符串并返回。字符串地址存在 SI 中。
         MOV     AL, [SI]
-        ADD     SI, 1        ; SI 自增 1
+        INC     SI          ; SI 自增 1
         CMP     AL, 0
         JNE     PutloopContinue
         RET
@@ -229,18 +230,13 @@ PutloopContinue:
 BootFailed:
         MOV     SI, szOSFailedBoot
         CALL    PutString
+
 BootFailedLoop:
         HLT
         JMP     BootFailedLoop     ; 无限循环
 
 
 ; 字符串定义
-
-szLoadingKernel:
-        DB      0x0a, 0x0a        ; 换行两次
-        DB      "Loading kernel file..."
-        DB      0x0d, 0x0a         ; CRLF 换行
-        DB      0
 
 szFailedFindBootBin: 
         DB      0x0a, 0x0a        ; 换行两次
@@ -254,9 +250,9 @@ szLBANotSupported:
         DB      0x0d, 0x0a         ; CRLF 换行
         DB      0
 
-szEncounterBadCluster:
+szFoundBadCluster:
         DB      0x0a, 0x0a        ; 换行两次
-        DB      "Encountered bad cluster when booting."
+        DB      "Found bad cluster when booting."
         DB      0x0d, 0x0a         ; CRLF 换行
         DB      0
 
