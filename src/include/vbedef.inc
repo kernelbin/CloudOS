@@ -5,12 +5,18 @@
 
 STRUC   VBE_INFO_BLOCK
 
-    .VbeSignature:   RESB    4
-    .VbeVersion:     RESW    1
-    .OemStringPtr:   RESW    2
-    .Capabilities:   RESB    4
-    .VideoModePtr:   RESW    2
-    .TotalMemory:    RESW    1
+    .VbeSignature:      RESB    4
+    .VbeVersion:        RESW    1
+    .OemStringPtr:      RESD    1
+    .Capabilities:      RESB    4
+    .VideoModePtr:      RESD    1
+    .TotalMemory:       RESW    1
+    .OemSoftwareRev:    RESW    1
+    .OemVendorNamePtr:  RESD    1
+    .OemProductNamePtr: RESD    1
+    .OemProductRevPtr:  RESD    1
+    .Reserved:          RESB    222
+    .OemData:           RESB    256
 
 ENDSTRUC
 
