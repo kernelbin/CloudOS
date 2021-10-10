@@ -8,6 +8,8 @@ VESA_VIDEO_MODE EQU 0x118
 
 ORG     0xbe00
 
+        ; Check if we have VBE (VESA BIOS Extension), and select a video mode.
+
         ; Check the existance of VBE
         XOR     AX, AX
         MOV     ES, AX
@@ -33,13 +35,14 @@ ORG     0xbe00
         CMP     BYTE [VbeInfoBlock + VBE_MODE_INFO.bpp], 24
         JNE     VBENotAvailable
 
-        MOV     SI, QWQ
-        CALL    PutString
-        JMP     FinLoop
+        ; select this mode
+        MOV     BX ,VESA_VIDEO_MODE | 0x4000 ; If mode makes use of a linear framebuffer, should OR the mode number with 0x4000.
+        MOV     AX ,0x4f02
+        INT     0x10
+        CMP     AX, 0x004f
+        JNE     VBENotAvailable
 
-QWQ:
-DB "All checking passed!"
-DB 0
+        JMP     FinLoop
 
 VBENotAvailable:
         MOV     SI, szVBENotAvail
@@ -52,9 +55,9 @@ FinLoop:
 
 PutString:
 ; 显示一个字符串并返回。字符串地址存在 SI 中。
-        MOV     AL,[SI]
-        ADD     SI,1        ; SI 自增 1
-        CMP     AL,0
+        MOV     AL, [SI]
+        INC     SI
+        CMP     AL, 0
         JNE     PutloopContinue
         RET
 PutloopContinue:
