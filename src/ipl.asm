@@ -48,10 +48,10 @@ Entry:
 
 ; 程序主体
 
-        XOR     AX, AX               ; 寄存器初始化
+        XOR     AX, AX          ; 寄存器初始化
         MOV     SS, AX
         MOV     DS, AX
-        MOV     SP, 0x7c00
+        MOV     SP, 0x500       ; This address (0x500 - 0x7BFF) is available from the memory map
 
 ; 读取 FAT12 的 FAT表 和 根目录
 
