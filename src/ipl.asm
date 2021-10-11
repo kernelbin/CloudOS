@@ -75,7 +75,7 @@ LBASupported:
 
         ; 所以，要完整读入 FAT表 两张以及根目录，需要 32 个扇区
         ; 我们把这些内容全部读进 0x7e00开始的地方
-        
+
         MOV     WORD    [BlkCnt], 32
         MOV     WORD    [DstMem], 0x7e00      ; 内存中 0x7c00 - 0x7dff 被 ipl 占据。从 0x7e00 开始放置
         MOV     DWORD   [OrgLBA], 1           ; 磁盘里第一个 block 就是 ipl 没必要再读。
@@ -88,15 +88,39 @@ LBASupported:
         INT     0x13
 
         ; TODO: 检查实际读取的扇区数量
+
+        ; Call ReadFile to read boot.bin in
+        MOV     AX, 0xbe00
+        MOV     DI, szBootBinFileName
+        CALL    ReadFile
+        CMP     AX, 0
+        JE      0xbe00
+
+        CMP     AX, 1
+        JE      FailedFindBootBin
+        CMP     AX, 2
+        JE      InterruptedFileSystem
+
+        ; Unknown error
+        JMP     BootFailed
         
-        ; 磁盘里的内容被我们读进了 0x7e00 开始的内存，加上 FAT 表两张 9*2*512，所以目录表在 0xa200 
+; Usage:
+;       AX: where the file will be loaded.
+;       DI: the file name string (coresponding with 8-3 file name)
+;    return:
+;       success:        AX = 0
+;       file not found: AX = 1
+;       fs interrupted: AX = 2
+ReadFile:
+
+        ; 磁盘里的内容被我们读进了 0x7e00 开始的内存，加上 FAT 表两张 9*2*512，所以目录表在 0xa200
         MOV     SI, 0xa200
         XOR     CX, CX
 
 FindBootBinLoop:
 
         CMP     CX, 224     ; 总共 224 个目录
-        JE      FailedFindBootBin
+        JE      ReadFileNotFound
 
         ; 文件名和扩展名正好是前 11 个字节。逐个比较。
         ; TODO: 跳过空目录项，以及长文件名。
@@ -111,7 +135,7 @@ CmpFileName:
         CMP     BX, 11
         JE      BootBinFound
         MOV     DX, [SI + BX]
-        CMP     DX, [szBootBinFileName + BX]
+        CMP     DX, [DI + BX]
         
         JE      CmpNextChar
 
@@ -130,24 +154,24 @@ BootBinFound:
 
         MOV     WORD    [BlkCnt], 1           ; 始终一个扇区一个扇区读取
 
-        MOV     DI, 0xbe00 ; 存目标读取地址
+        MOV     DI, AX ; 存目标读取地址
 
 ReadCluster:
         ; 0xFF8-0xFFF means last cluster in a file
         CMP     CX, 0xff8
-        JNB     0xbe00
+        JNB     ReadFileSuccess
 
         ; 0xFF7 means bad cluster
         CMP     CX, 0xff7
-        JNB     BadCluster
+        JNB     ReadFileFailed
 
         ; 0xFF0-0xFF6 means reserved cluster
         CMP     CX, 0xff0
-        JNB     InterruptedFileSystem
+        JNB     ReadFileFailed
 
         ; 0x000-0x001 should never used. First cluster begins from 2
         CMP     CX, 0x002
-        JB      InterruptedFileSystem
+        JB      ReadFileFailed
 
         MOV     WORD    [DstMem], DI
 
@@ -185,15 +209,20 @@ OddCluster:
         JMP     ReadCluster
 
 
+ReadFileSuccess:
+        MOV     AX, 0
+        RET
+
+ReadFileNotFound:
+        MOV     AX, 1
+        RET
+
+ReadFileFailed:
+        MOV     AX, 2
+        RET
+
 FailedFindBootBin:
-        
         MOV     SI, szFailedFindBootBin
-        CALL    PutString
-
-        JMP     BootFailed
-
-BadCluster:
-        MOV     SI, szFoundBadCluster
         CALL    PutString
 
         JMP     BootFailed
@@ -237,12 +266,6 @@ szFailedFindBootBin:
 szLBANotSupported:
         DB      0x0a, 0x0a        ; 换行两次
         DB      "LBA not supported."
-        DB      0x0d, 0x0a         ; CRLF 换行
-        DB      0
-
-szFoundBadCluster:
-        DB      0x0a, 0x0a        ; 换行两次
-        DB      "Found bad cluster when booting."
         DB      0x0d, 0x0a         ; CRLF 换行
         DB      0
 
