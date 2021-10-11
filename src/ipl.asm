@@ -133,29 +133,21 @@ BootBinFound:
         MOV     DI, 0xbe00 ; 存目标读取地址
 
 ReadCluster:
-
+        ; 0xFF8-0xFFF means last cluster in a file
         CMP     CX, 0xff8
-        ; 这应该是文件最后一个簇。
         JNB     0xbe00
 
+        ; 0xFF7 means bad cluster
         CMP     CX, 0xff7
-        ; 坏簇
         JNB     BadCluster
 
+        ; 0xFF0-0xFF6 means reserved cluster
         CMP     CX, 0xff0
-        ; 保留值
         JNB     InterruptedFileSystem
 
+        ; 0x000-0x001 should never used. First cluster begins from 2
         CMP     CX, 0x002
-        ; 正常簇号，继续执行。
-        
-        ; 空闲簇/保留簇
         JB      InterruptedFileSystem
-
-
-        ; TODO: 分类处理遇到坏簇，无效簇号等情况
-
-        JA      0xbe00
 
         MOV     WORD    [DstMem], DI
 
@@ -176,20 +168,20 @@ ReadCluster:
         SHR     BX, 1
         ADD     BX, CX
 
-        INC     CX
-        
+        ; move the destination address back
+        ADD     DI, 0x0200
+
+        AND     CX, 1
         JNZ     OddCluster
         MOV     WORD    CX, [0x7e00 + BX]
         AND     CX, 0x0fff
 
-        ADD     DI, 0x0200
         JMP     ReadCluster
 
 OddCluster:
         MOV     WORD    CX, [0x7e00 + BX]
         SHR     CX, 4
 
-        ADD     DI, 0x0200
         JMP     ReadCluster
 
 
