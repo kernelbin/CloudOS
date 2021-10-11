@@ -20,4 +20,4 @@ default : ./bin/cloudos.img
 
 .PHONY: clean
 clean:
-	del /Q /S .\bin
+	cmd /C del /Q /S .\bin
