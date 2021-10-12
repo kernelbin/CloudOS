@@ -7,7 +7,7 @@
 
 VESA_VIDEO_MODE EQU 0x118
 
-ORG     0xbe00
+[SECTION .text16]
 [BITS 16]
         ; Pop out the function we passed from ipl.asm
         POP     AX
@@ -127,6 +127,7 @@ FuncReadFile:
         DW      0
 
 ; ================ 32 bit code starting from here ================
+[SECTION .text32]
 [BITS   32]
 
 LABEL_SEG_CODE32:
