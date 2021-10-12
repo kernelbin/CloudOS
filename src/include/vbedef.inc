@@ -1,4 +1,4 @@
-; fat12def.inc  macros for VBE (VESA BIOS Extension)
+; vbedef.inc  macros for VBE (VESA BIOS Extension)
 ; Copyright (c) He yang 2020 (1160386205@qq.com)
 
 ; see these structure definition at https://wiki.osdev.org/VESA_Video_Modes

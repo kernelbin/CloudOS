@@ -9,6 +9,11 @@ VESA_VIDEO_MODE EQU 0x118
 
 ORG     0xbe00
 [BITS 16]
+        ; Pop out the function we passed from ipl.asm
+        POP     AX
+        MOV     [FuncPutString], AX
+        POP     AX
+        MOV     [FuncReadFile], AX
 
         ; ================ Check if we have VBE (VESA BIOS Extension), and select a video mode. ================
 
@@ -75,32 +80,27 @@ ORG     0xbe00
 
 VBENotAvailable:
         MOV     SI, szVBENotAvail
-        CALL    PutString
+        CALL    [FuncPutString]
         ; Fall through
 
 FinLoop:
         HLT
         JMP     FinLoop
 
-PutString:
-; 显示一个字符串并返回。字符串地址存在 SI 中。
-        MOV     AL, [SI]
-        INC     SI
-        CMP     AL, 0
-        JNE     PutloopContinue
-        RET
-
-PutloopContinue:
-        MOV     AH,0x0e     ; 显示字符
-        MOV     BX,15       ; 文本颜色
-        INT     0x10        ; 调用 BIOS 显示
-        JMP     PutString
-
 szVBENotAvail:
         DB      0x0a, 0x0a
         DB      "Error : VBE Not avaliable or version too low."
         DB      0x0a, 0x0a
         DB      0
+
+
+VbeInfoBlock:
+ISTRUC  VBE_INFO_BLOCK
+IEND
+
+VbeModeInfo:
+ISTRUC  VBE_MODE_INFO
+IEND
 
 ; GDT Table
 
@@ -119,6 +119,12 @@ ISTRUC  GDTR_STRUC
         AT GDTR_STRUC.Base,     DD LABEL_GDT    ; DS is always zero. (We've set it to zero in ipl.asm) so OK to write like this
 IEND
 
+; Function address
+FuncPutString:
+        DW      0
+
+FuncReadFile:
+        DW      0
 
 ; ================ 32 bit code starting from here ================
 [BITS   32]
@@ -136,14 +142,3 @@ LABEL_SEG_CODE32:
 RealModeFin:
         HLT
         JMP RealModeFin
-
-; ================ Define variables address. ================
-[BITS   16]
-; Their space are directly followed at the end of boot.bin (this file)
-; We don't reserve these variables in this file directly in order to shrink file size.
-
-%assign pVarAddr        0
-VbeInfoBlock equ $ + pVarAddr
-
-%assign pVarAddr        pVarAddr + VBE_INFO_BLOCK_size
-VbeModeInfo equ $ + pVarAddr
