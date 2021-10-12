@@ -80,26 +80,12 @@ ORG     0xbe00
 
 VBENotAvailable:
         MOV     SI, szVBENotAvail
-        CALL    PutString
+        CALL    [FuncPutString]
         ; Fall through
 
 FinLoop:
         HLT
         JMP     FinLoop
-
-PutString:
-; 显示一个字符串并返回。字符串地址存在 SI 中。
-        MOV     AL, [SI]
-        INC     SI
-        CMP     AL, 0
-        JNE     PutloopContinue
-        RET
-
-PutloopContinue:
-        MOV     AH,0x0e     ; 显示字符
-        MOV     BX,15       ; 文本颜色
-        INT     0x10        ; 调用 BIOS 显示
-        JMP     PutString
 
 szVBENotAvail:
         DB      0x0a, 0x0a
