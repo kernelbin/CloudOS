@@ -107,6 +107,15 @@ szVBENotAvail:
         DB      0x0a, 0x0a
         DB      0
 
+
+VbeInfoBlock:
+ISTRUC  VBE_INFO_BLOCK
+IEND
+
+VbeModeInfo:
+ISTRUC  VBE_MODE_INFO
+IEND
+
 ; GDT Table
 
 LABEL_GDT:              DESCRIPTOR      0,              0,                              0  ; 空描述符
@@ -124,6 +133,7 @@ ISTRUC  GDTR_STRUC
         AT GDTR_STRUC.Base,     DD LABEL_GDT    ; DS is always zero. (We've set it to zero in ipl.asm) so OK to write like this
 IEND
 
+; Function address
 FuncPutString:
         DW      0
 
@@ -146,14 +156,3 @@ LABEL_SEG_CODE32:
 RealModeFin:
         HLT
         JMP RealModeFin
-
-; ================ Define variables address. ================
-[BITS   16]
-; Their space are directly followed at the end of boot.bin (this file)
-; We don't reserve these variables in this file directly in order to shrink file size.
-
-%assign pVarAddr        0
-VbeInfoBlock equ $ + pVarAddr
-
-%assign pVarAddr        pVarAddr + VBE_INFO_BLOCK_size
-VbeModeInfo equ $ + pVarAddr

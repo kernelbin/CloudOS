@@ -43,7 +43,6 @@ OrgLBA: DD      0               ; 要读取的 logical block address，48位里�
         DD      0               ; 要读取的 logical block address, 48位里的高32位
 
 
-
 Entry:
 
 ; 程序主体
@@ -53,10 +52,9 @@ Entry:
         MOV     DS, AX
         MOV     SP, 0x500       ; This address (0x500 - 0x7BFF) is available from the memory map
 
-; 读取 FAT12 的 FAT表 和 根目录
+        ; 读取 FAT12 的 FAT表 和 根目录
 
         ; 检查 INT13h 扩展是否支持
-
         MOV     AH, 0x41
         MOV     BX, 0x55aa
         MOV     DL, 0x80
@@ -139,7 +137,7 @@ CmpFileName:
         JE      BootBinFound
         MOV     DX, [SI + BX]
         CMP     DX, [DI + BX]
-        
+
         JE      CmpNextChar
 
         ; 文件名并不一致。跳过。
@@ -151,7 +149,7 @@ BootBinFound:
 
         ; 枚举FAT表，将文件读入
         MOV     WORD    CX, [SI + FAT12_DIR_ENTRY.FirstCluster]
-        
+
         ; 将这个扇区读入指定地址，然后找下一个扇区
 
 
