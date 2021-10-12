@@ -9,6 +9,11 @@ VESA_VIDEO_MODE EQU 0x118
 
 ORG     0xbe00
 [BITS 16]
+        ; Pop out the function we passed from ipl.asm
+        POP     AX
+        MOV     [FuncPutString], AX
+        POP     AX
+        MOV     [FuncReadFile], AX
 
         ; ================ Check if we have VBE (VESA BIOS Extension), and select a video mode. ================
 
@@ -119,6 +124,11 @@ ISTRUC  GDTR_STRUC
         AT GDTR_STRUC.Base,     DD LABEL_GDT    ; DS is always zero. (We've set it to zero in ipl.asm) so OK to write like this
 IEND
 
+FuncPutString:
+        DW      0
+
+FuncReadFile:
+        DW      0
 
 ; ================ 32 bit code starting from here ================
 [BITS   32]

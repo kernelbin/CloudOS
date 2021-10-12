@@ -93,17 +93,20 @@ LBASupported:
         MOV     AX, 0xbe00
         MOV     DI, szBootBinFileName
         CALL    ReadFile
-        CMP     AX, 0
-        JE      0xbe00
 
         CMP     AX, 1
         JE      FailedFindBootBin
         CMP     AX, 2
         JE      InterruptedFileSystem
-
-        ; Unknown error
-        JMP     BootFailed
+        JA      BootFailed      ; Unknown error
         
+        ; Success.
+        ; Before jumping, pass function address using stack
+        PUSH    ReadFile
+        PUSH    PutString
+
+        JMP     0xbe00
+
 ; Usage:
 ;       AX: where the file will be loaded.
 ;       DI: the file name string (coresponding with 8-3 file name)
