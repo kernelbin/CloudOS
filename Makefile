@@ -6,9 +6,10 @@ GCC      = i686-elf-gcc.exe
 
 default : ./bin/cloudos.img
 
-./bin/cloudos.img : ./bin/ipl.bin ./bin/boot.bin
+./bin/cloudos.img : ./bin/ipl.bin ./bin/boot.bin ./src/font.fnt
 	$(FATIMG) -c -F -f ./bin/cloudos.img -s ./bin/ipl.bin
 	$(FATIMG) -m -F -f ./bin/cloudos.img -i ./bin/boot.bin -n BOOT.BIN
+	$(FATIMG) -m -F -f ./bin/cloudos.img -i ./src/font.fnt -n FONT.FNT
 
 ./bin/ipl.bin : ./src/ipl.asm
 	cmd /C if not exist bin md bin

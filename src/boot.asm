@@ -6,6 +6,7 @@
 %include "gdtdef.inc"
 
 global VbeModeInfo
+global FontFileAddr
 
 extern CloudMain
 
@@ -19,7 +20,19 @@ VESA_VIDEO_MODE EQU 0x118
         POP     AX
         MOV     [FuncReadFile], AX
 
+        ; Load Font File
+        MOV     AX, [FontFileAddr]
+        MOV     DI, FontFileName
+        CALL    [FuncReadFile]
+
+        CMP     AX, 1
+        JE      FailedFindFont
+        CMP     AX, 2
+        JE      InterruptedFileSystem
+        JA      BootFailed      ; Unknown error
+
         ; ================ Check if we have VBE (VESA BIOS Extension), and select a video mode. ================
+
 
         ; Check the existance of VBE
         XOR     AX, AX
@@ -85,11 +98,34 @@ VESA_VIDEO_MODE EQU 0x118
 VBENotAvailable:
         MOV     SI, szVBENotAvail
         CALL    [FuncPutString]
-        ; Fall through
+        JMP     BootFailed
 
-FinLoop:
+FailedFindFont:
+        MOV     SI, szFailedFindFont
+        CALL    [FuncPutString]
+        JMP     BootFailed
+
+InterruptedFileSystem:
+        MOV     SI, szInterruptedFileSystem
+        CALL    [FuncPutString]
+
+        JMP     BootFailed
+
+BootFailed:
         HLT
-        JMP     FinLoop
+        JMP     BootFailed
+
+szFailedFindFont:
+        DB      0x0a, 0x0a        ; 换行两次
+        DB      "Failed to find Font File"
+        DB      0x0d, 0x0a         ; CRLF 换行
+        DB      0
+
+szInterruptedFileSystem:
+        DB      0x0a, 0x0a        ; 换行两次
+        DB      "Filesystem is interrupted."
+        DB      0x0d, 0x0a         ; CRLF 换行
+        DB      0
 
 szVBENotAvail:
         DB      0x0a, 0x0a
@@ -129,6 +165,15 @@ FuncPutString:
 
 FuncReadFile:
         DW      0
+
+; Font file name
+FontFileName:
+        DB      "FONT    FNT"
+        DB      0
+
+; Font file address
+FontFileAddr:
+        DD      0x5C00
 
 ; ================ 32 bit code starting from here ================
 [SECTION .text32]
