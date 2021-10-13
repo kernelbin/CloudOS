@@ -6,7 +6,8 @@ name: CI
 # events but only for the master branch
 on:
   push:
-    branches: [ master ]
+    branches:
+      - '**' # all branches
   pull_request:
     branches: [ master ]
 
@@ -25,7 +26,7 @@ jobs:
       # build CloudOS image
       - name: build CloudOS image
         run: |
-          cmd /C "make"
+          cmd /C "setupenv.bat && make"
       - name: upload artifacts
         uses: actions/upload-artifact@v2
         with:
