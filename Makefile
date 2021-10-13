@@ -1,9 +1,8 @@
-TOOLPATH = ./tools/
-
-MAKE     = $(TOOLPATH)make/make.exe --no-builtin-rules
-NASM     = $(TOOLPATH)nasm/nasm.exe
-FATIMG   = $(TOOLPATH)fat_imgen/fat_imgen.exe
-LD       = $(TOOLPATH)i686-elf-tools-windows/bin/i686-elf-ld.exe
+MAKE     = make.exe --no-builtin-rules
+NASM     = nasm.exe
+FATIMG   = fat_imgen.exe
+LD       = i686-elf-ld.exe
+GCC      = i686-elf-gcc.exe
 
 default : ./bin/cloudos.img
 
@@ -15,13 +14,17 @@ default : ./bin/cloudos.img
 	cmd /C if not exist bin md bin
 	$(NASM) -i./src/include/ ./src/ipl.asm -o ./bin/ipl.bin
 
-./bin/boot.bin : ./bin/boot.o ./src/boot_linker.ld
+./bin/boot.bin : ./bin/boot.o ./bin/boot_c.o ./src/boot_linker.ld
 	cmd /C if not exist bin md bin
-	$(LD)  -T ./src/boot_linker.ld -nostdlib ./bin/boot.o -o ./bin/boot.bin
+	$(LD) -T ./src/boot_linker.ld -nostdlib ./bin/boot.o ./bin/boot_c.o -o ./bin/boot.bin
 
 ./bin/boot.o : ./src/boot.asm
 	cmd /C if not exist bin md bin
 	$(NASM) -i./src/include/ ./src/boot.asm -f elf -o ./bin/boot.o
+
+./bin/boot_c.o : ./src/boot.c
+	cmd /C if not exist bin md bin
+	$(GCC) -c ./src/boot.c -o ./bin/boot_c.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 .PHONY: clean
 clean:

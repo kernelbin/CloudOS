@@ -1,1 +1,0 @@
-these tools comes from https://github.com/lordmilko/i686-elf-tools

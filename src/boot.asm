@@ -5,6 +5,10 @@
 %include "vbedef.inc"
 %include "gdtdef.inc"
 
+global VbeModeInfo
+
+extern CloudMain
+
 VESA_VIDEO_MODE EQU 0x118
 
 [SECTION .text16]
@@ -140,6 +144,4 @@ LABEL_SEG_CODE32:
         MOV     GS, AX
         MOV     SS, AX
 
-RealModeFin:
-        HLT
-        JMP RealModeFin
+        JMP     CloudMain
