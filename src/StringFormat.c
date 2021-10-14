@@ -1,6 +1,15 @@
 #include <stdarg.h>
 #include "StringFormat.h"
 
+char HexToChar(int Hex)
+{
+    if (Hex < 10)
+    {
+        return Hex + '0';
+    }
+    return Hex - 10 + 'A';
+}
+
 int VStringFormat(char Buffer[], int BufSize, int cnt, va_list ValList)
 {
     if (Buffer)
@@ -61,6 +70,27 @@ int VStringFormat(char Buffer[], int BufSize, int cnt, va_list ValList)
                     }
                     cchLength++;
                 }
+                break;
+            }
+            case TYPE_PTR:
+            {
+                unsigned int PtrInt = va_arg(ValList, unsigned int);
+
+                if (Buffer)
+                {
+                    Buffer[cchLength] = '0';
+                    Buffer[cchLength + 1] = 'x';
+                }
+                cchLength += 2;
+                for(int i = 0; i < 8; i++)
+                {
+                    if(Buffer)
+                    {
+                        Buffer[cchLength + 7 - i] = HexToChar(PtrInt & 0x0000000F);
+                        PtrInt >>= 4;
+                    }
+                }
+                cchLength += 8;
                 break;
             }
             default:

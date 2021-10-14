@@ -10,6 +10,7 @@
 
 #define TYPE_INT 1
 #define TYPE_STR 2
+#define TYPE_PTR 3
 
 int VStringFormat(char Buffer[], int BufSize, int cnt, va_list ValList);
 int StringFormat(char Buffer[], int BufSize, int cnt, ...);
