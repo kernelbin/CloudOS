@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "vbedef.h"
 #include "font.h"
+#include "StringFormat.h"
 
 extern VBE_MODE_INFO_STRUCTURE VbeModeInfo;
 
@@ -31,7 +32,18 @@ int CloudMain()
     PaintDesktop();
     PrepareFont();
 
-    PrintString(20, 20, "CloudOS build time: " __DATE__ " " __TIME__, 2, 255, 255, 255);
+    char Buf[100] = { 0 };
+    StringFormat(Buf,
+                 (sizeof(Buf)/sizeof(Buf[0])) - 1,
+                 5,
+                 TYPE_STR, "Screen Resolution: (",
+                 TYPE_INT, VbeModeInfo.width,
+                 TYPE_STR, ", ",
+                 TYPE_INT, VbeModeInfo.height,
+                 TYPE_STR, ")");
+
+    PrintString(23, 23, Buf, 3, 0, 0, 0);
+    PrintString(20, 20, Buf, 3, 255, 255, 255);
 
     while(1)
     {

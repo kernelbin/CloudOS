@@ -15,9 +15,9 @@ default : ./bin/cloudos.img
 	cmd /C if not exist bin md bin
 	$(NASM) -i./src/include/ ./src/ipl.asm -o ./bin/ipl.bin
 
-./bin/boot.bin : ./bin/boot.o ./bin/boot_c.o ./bin/font.o ./src/boot_linker.ld
+./bin/boot.bin : ./bin/boot.o ./bin/boot_c.o ./bin/font.o ./bin/StringFormat.o ./src/boot_linker.ld
 	cmd /C if not exist bin md bin
-	$(LD) -T ./src/boot_linker.ld -nostdlib ./bin/boot.o ./bin/boot_c.o ./bin/font.o -o ./bin/boot.bin
+	$(LD) -T ./src/boot_linker.ld -nostdlib ./bin/boot.o ./bin/boot_c.o ./bin/font.o ./bin/StringFormat.o -o ./bin/boot.bin
 
 ./bin/boot.o : ./src/boot.asm
 	cmd /C if not exist bin md bin
@@ -30,6 +30,10 @@ default : ./bin/cloudos.img
 ./bin/font.o : ./src/font.c
 	cmd /C if not exist bin md bin
 	$(GCC) -I ./src/include/ -c ./src/font.c -o ./bin/font.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+
+./bin/StringFormat.o : ./src/StringFormat.c
+	cmd /C if not exist bin md bin
+	$(GCC) -I ./src/include/ -c ./src/StringFormat.c -o ./bin/StringFormat.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 .PHONY: clean
 clean:
