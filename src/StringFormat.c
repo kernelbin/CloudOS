@@ -33,11 +33,12 @@ int VStringFormat(char Buffer[], int BufSize, int cnt, va_list ValList)
                 }
                 int sp = 0;
                 char Stack[10]; // at most 10 digit (demical) for int
-                while (Num)
+
+                do
                 {
                     Stack[sp++] = Num % 10;
                     Num /= 10;
-                }
+                } while (Num);
 
                 while (sp--)
                 {
