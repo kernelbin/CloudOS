@@ -7,6 +7,8 @@
 
 global VbeModeInfo
 global FontFileAddr
+global MemInfoEntryCnt
+global MemInfoAddr
 
 extern CloudMain
 
@@ -19,6 +21,13 @@ VESA_VIDEO_MODE EQU 0x118
         MOV     [FuncPutString], AX
         POP     AX
         MOV     [FuncReadFile], AX
+
+        ; Get Memory Layout Information
+        MOV     AX, 0
+        MOV     ES, AX
+        MOV     DI, 0
+        call    GetMemoryLayout
+        JC      FailedGetMemoryLayout
 
         ; Load Font File
         MOV     AX, [FontFileAddr]
@@ -93,10 +102,70 @@ VESA_VIDEO_MODE EQU 0x118
         MOV     CR0, EAX
 
         ; We're already in protece mode. Do a long jump to set CS properly.
-        JMP     dword SelectorGlobalCode:LABEL_SEG_CODE32
+        JMP     DWORD SelectorGlobalCode:LABEL_SEG_CODE32
+
+; use the INT 0x15, EAX = 0xE820 BIOS function to get a memory map
+; note: initially di is 0, be sure to set it to a value so that the BIOS code will not be overwritten.
+;       The consequence of overwriting the BIOS code will lead to problems like getting stuck in `int 0x15`
+; inputs: ES:DI -> destination buffer for 24 byte entries
+; outputs: entry count result will be stored in [MemInfoEntryCnt], and the where the result is stored at address [MemInfoAddr]
+;          carry flag will be set if failed.
+GetMemoryLayout:
+        MOV     AX, [MemInfoAddr]
+        MOV     DI, AX
+        XOR     EBX, EBX                ; EBX must be 0 to start
+        XOR     BP, BP                  ; keep an entry count in BP
+        MOV     EDX, 0x0534D4150        ; Place "SMAP" into EDX
+        MOV     EAX, 0xE820
+        MOV     [ES:DI + 20], DWORD 1   ; force a valid ACPI 3.X entry
+        MOV     ECX, 24                 ; ask for 24 bytes
+        INT     0x15
+        JC      SHORT .GetMemLayoutFailed; carry set on first call means "unsupported function"
+        MOV     EDX, 0x0534D4150        ; Some BIOSes apparently trash this register?
+        CMP     EAX, EDX                ; on success, EAX must have been reset to "SMAP"
+        JNE     SHORT .GetMemLayoutFailed
+        TEST    EBX, EBX                ; EBX = 0 implies list is only 1 entry long (worthless)
+        JE      SHORT .GetMemLayoutFailed
+        JMP     SHORT .JmpIn
+.E820LP:
+        MOV     EAX, 0xE820             ; EAX, ECX get trashed on every int 0x15 call
+        MOV     [ES:DI + 20], DWORD 1   ; force a valid ACPI 3.X entry
+        MOV     ECX, 24                 ; ask for 24 bytes again
+        INT     0x15
+        JC      SHORT .E820F             ; carry set means "end of list already reached"
+        MOV     EDX, 0x0534D4150        ; repair potentially trashed register
+.JmpIn:
+        JCXZ    .SkipEntry               ; skip any 0 length entries
+        CMP     CL, 20                  ; got a 24 byte ACPI 3.X response?
+        JBE     SHORT .NoText
+        TEST    BYTE [ES:DI + 20], 1    ; if so: is the "ignore this data" bit clear?
+        JE      SHORT .SkipEntry
+.NoText:
+        MOV     ECX, [ES:DI + 8]        ; get lower uint32_t of memory region length
+        OR      ECX, [ES:DI + 12]       ; "or" it with upper uint32_t to test for zero
+        JZ      .SkipEntry               ; if length uint64_t is 0, skip entry
+        INC     BP                      ; got a good entry: ++count, move to next storage spot
+        ADD     DI, 24
+.SkipEntry:
+        TEST    EBX, EBX                ; if EBX resets to 0, list is complete
+        JNE     SHORT .E820LP
+.E820F:
+        MOV [MemInfoEntryCnt], BP       ; store the entry count
+        CLC                             ; there is "jc" on end of list to this point, so the carry must be cleared
+        RET
+.GetMemLayoutFailed:
+        STC                             ; "function unsupported" error exit
+        RET
+
+
 
 VBENotAvailable:
         MOV     SI, szVBENotAvail
+        CALL    [FuncPutString]
+        JMP     BootFailed
+
+FailedGetMemoryLayout:
+        MOV     SI, szFailedGetMemoryLayout
         CALL    [FuncPutString]
         JMP     BootFailed
 
@@ -114,6 +183,12 @@ InterruptedFileSystem:
 BootFailed:
         HLT
         JMP     BootFailed
+
+szFailedGetMemoryLayout:
+        DB      0x0a, 0x0a        ; 换行两次
+        DB      "Failed to get memory layout info."
+        DB      0x0d, 0x0a         ; CRLF 换行
+        DB      0
 
 szFailedFindFont:
         DB      0x0a, 0x0a        ; 换行两次
@@ -170,6 +245,12 @@ FuncReadFile:
 FontFileName:
         DB      "FONT    FNT"
         DB      0
+
+; Memory layout info address
+MemInfoEntryCnt:
+        DD      0
+MemInfoAddr:
+        DD      0xDE00
 
 ; Font file address
 FontFileAddr:

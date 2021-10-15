@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include "vbedef.h"
+#include "MemLayout.h"
 #include "font.h"
 #include "StringFormat.h"
 
@@ -45,8 +46,40 @@ int CloudMain()
     PrintString(23, 23, Buf, 3, 0, 0, 0);
     PrintString(20, 20, Buf, 3, 255, 255, 255);
 
+    int len = StringFormat(Buf,
+                (sizeof(Buf)/sizeof(Buf[0])) - 1,
+                3,
+                TYPE_STR, "MemInfoEntryCnt = ",
+                TYPE_INT, MemInfoEntryCnt,
+                TYPE_STR, ".");
+    Buf[len] = 0;
+    PrintString(23, 53, Buf, 3, 0, 0, 0);
+    PrintString(20, 50, Buf, 3, 255, 255, 255);
+
+    for(int i = 0; i < MemInfoEntryCnt; i++)
+    {
+        int len = StringFormat(Buf,
+                (sizeof(Buf)/sizeof(Buf[0])) - 1,
+                10,
+                TYPE_STR, "Base: ",
+                TYPE_PTR, MemInfoAddr[i].BaseH,
+                TYPE_STR, " ",
+                TYPE_PTR, MemInfoAddr[i].BaseL,
+                TYPE_STR, " Length: ",
+                TYPE_PTR, MemInfoAddr[i].LengthH,
+                TYPE_STR, " ",
+                TYPE_PTR, MemInfoAddr[i].LengthL,
+                TYPE_STR, " -> ",
+                TYPE_INT, MemInfoAddr[i].Type
+                );
+            Buf[len] = 0;
+            PrintString(22, 102 + i * 20, Buf, 2, 0, 0, 0);
+            PrintString(20, 100 + i * 20, Buf, 2, 255, 255, 255);
+    }
+
     while(1)
     {
         asm("HLT");
     }
+    return 0;
 }
