@@ -4,6 +4,10 @@
  *
  * see these structure definition at https://wiki.osdev.org/VESA_Video_Modes
  */
+
+#ifndef _VBEDEF_H_
+#define _VBEDEF_H_
+
 #include <stdint.h>
 
 typedef struct _VBE_MODE_INFO_STRUCTURE {
@@ -43,3 +47,5 @@ typedef struct _VBE_MODE_INFO_STRUCTURE {
 	uint16_t off_screen_mem_size;	// size of memory in the framebuffer but not being displayed on the screen
 	uint8_t reserved1[206];
 } __attribute__ ((packed)) VBE_MODE_INFO_STRUCTURE;
+
+#endif // _VBEDEF_H_

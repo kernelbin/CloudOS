@@ -3,8 +3,8 @@
  * Copyright (c) He yang 2021 (1160386205@qq.com)
  */
 
-#ifndef _STRING_FORMAT_
-#define _STRING_FORMAT_
+#ifndef _STRING_FORMAT_H_
+#define _STRING_FORMAT_H_
 
 #include <stdarg.h>
 
@@ -15,4 +15,4 @@
 int VStringFormat(char Buffer[], int BufSize, int cnt, va_list ValList);
 int StringFormat(char Buffer[], int BufSize, int cnt, ...);
 
-#endif // _STRING_FORMAT_
+#endif // _STRING_FORMAT_H_

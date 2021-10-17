@@ -8,8 +8,8 @@
 // These structs are only for accessing it.
 // See https://wiki.osdev.org/Detecting_Memory_(x86) for more details.
 
-#ifndef _MEM_LAYOUT_
-#define _MEM_LAYOUT_
+#ifndef _MEM_LAYOUT_H_
+#define _MEM_LAYOUT_H_
 
  typedef struct _MemLayoutEntry {
  
@@ -26,4 +26,4 @@
 extern int MemInfoEntryCnt;
 extern MEM_LAYOUT_ENTRY *MemInfoAddr;
 
-#endif //_MEM_LAYOUT_
+#endif //_MEM_LAYOUT_H_
