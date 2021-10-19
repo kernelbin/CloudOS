@@ -8,6 +8,8 @@
 #include "MemLayout.h"
 #include "font.h"
 #include "StringFormat.h"
+#include "FATDef.h"
+
 
 extern VBE_MODE_INFO_STRUCTURE VbeModeInfo;
 
@@ -33,6 +35,15 @@ int CloudMain()
     PaintDesktop();
     PrepareFont();
 
+    InitFAT12Helper();
+
+    unsigned char* Text = (unsigned char*)0x100000;
+
+    FAT12ReadRootDirFile("THEEND.TXT", Text, 8651);
+
+    PrintString(23, 23, (char *)Text, 2, 0, 0, 0);
+    PrintString(20, 20, (char *)Text, 2, 200, 200, 255);
+
     char Buf[100] = { 0 };
     StringFormat(Buf,
                  (sizeof(Buf)/sizeof(Buf[0])) - 1,
@@ -43,8 +54,8 @@ int CloudMain()
                  TYPE_INT, VbeModeInfo.height,
                  TYPE_STR, ")");
 
-    PrintString(23, 23, Buf, 3, 0, 0, 0);
-    PrintString(20, 20, Buf, 3, 255, 255, 255);
+    PrintString(23, 53, Buf, 3, 0, 0, 0);
+    PrintString(20, 50, Buf, 3, 255, 255, 255);
 
     int len = StringFormat(Buf,
                 (sizeof(Buf)/sizeof(Buf[0])) - 1,
@@ -53,8 +64,8 @@ int CloudMain()
                 TYPE_INT, MemInfoEntryCnt,
                 TYPE_STR, ".");
     Buf[len] = 0;
-    PrintString(23, 53, Buf, 3, 0, 0, 0);
-    PrintString(20, 50, Buf, 3, 255, 255, 255);
+    PrintString(23, 83, Buf, 3, 0, 0, 0);
+    PrintString(20, 80, Buf, 3, 255, 255, 255);
 
     for(int i = 0; i < MemInfoEntryCnt; i++)
     {
@@ -73,8 +84,8 @@ int CloudMain()
                 TYPE_INT, MemInfoAddr[i].Type
                 );
             Buf[len] = 0;
-            PrintString(22, 102 + i * 20, Buf, 2, 0, 0, 0);
-            PrintString(20, 100 + i * 20, Buf, 2, 255, 255, 255);
+            PrintString(22, 132 + i * 20, Buf, 2, 0, 0, 0);
+            PrintString(20, 130 + i * 20, Buf, 2, 255, 255, 255);
     }
 
     while(1)

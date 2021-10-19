@@ -6,18 +6,18 @@ GCC      = i686-elf-gcc.exe
 
 default : ./bin/cloudos.img
 
-./bin/cloudos.img : ./bin/ipl.bin ./bin/boot.bin ./src/font.fnt
+./bin/cloudos.img : ./bin/ipl.bin ./bin/boot.bin ./src/font.fnt ./src/theend.txt
 	$(FATIMG) -c -F -f ./bin/cloudos.img -s ./bin/ipl.bin
 	$(FATIMG) -m -F -f ./bin/cloudos.img -i ./bin/boot.bin -n BOOT.BIN
 	$(FATIMG) -m -F -f ./bin/cloudos.img -i ./src/font.fnt -n FONT.FNT
-
+	$(FATIMG) -m -F -f ./bin/cloudos.img -i ./src/theend.txt -n THEEND.TXT
 ./bin/ipl.bin : ./src/ipl.asm
 	cmd /C if not exist bin md bin
 	$(NASM) -i./src/include/ ./src/ipl.asm -o ./bin/ipl.bin
 
-./bin/boot.bin : ./bin/boot.o ./bin/boot_c.o ./bin/font.o ./bin/StringFormat.o ./src/boot_linker.ld
+./bin/boot.bin : ./bin/boot.o ./bin/AsmFunc.o ./bin/FAT12.o ./bin/boot_c.o ./bin/font.o ./bin/StringFormat.o ./src/boot_linker.ld
 	cmd /C if not exist bin md bin
-	$(LD) -T ./src/boot_linker.ld -nostdlib ./bin/boot.o ./bin/boot_c.o ./bin/font.o ./bin/StringFormat.o -o ./bin/boot.bin
+	$(LD) -T ./src/boot_linker.ld -nostdlib ./bin/boot.o ./bin/boot_c.o ./bin/AsmFunc.o ./bin/FAT12.o ./bin/font.o ./bin/StringFormat.o -o ./bin/boot.bin
 
 ./bin/boot.o : ./src/boot.asm
 	cmd /C if not exist bin md bin
@@ -34,6 +34,14 @@ default : ./bin/cloudos.img
 ./bin/StringFormat.o : ./src/StringFormat.c
 	cmd /C if not exist bin md bin
 	$(GCC) -I ./src/include/ -c ./src/StringFormat.c -o ./bin/StringFormat.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+
+./bin/AsmFunc.o : ./src/AsmFunc.asm
+	cmd /C if not exist bin md bin
+	$(NASM) -i./src/include/ ./src/AsmFunc.asm -f elf -o ./bin/AsmFunc.o
+
+./bin/FAT12.o : ./src/FAT12.c
+	cmd /C if not exist bin md bin
+	$(GCC) -I ./src/include/ -c ./src/FAT12.c -o ./bin/FAT12.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 .PHONY: clean
 clean:
