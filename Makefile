@@ -11,6 +11,7 @@ default : ./bin/cloudos.img
 	$(FATIMG) -m -F -f ./bin/cloudos.img -i ./bin/boot.bin -n BOOT.BIN
 	$(FATIMG) -m -F -f ./bin/cloudos.img -i ./src/font.fnt -n FONT.FNT
 	$(FATIMG) -m -F -f ./bin/cloudos.img -i ./src/theend.txt -n THEEND.TXT
+
 ./bin/ipl.bin : ./src/ipl.asm
 	cmd /C if not exist bin md bin
 	$(NASM) -i./src/include/ ./src/ipl.asm -o ./bin/ipl.bin
