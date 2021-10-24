@@ -24,8 +24,8 @@ NOP
         DW      2                ; 磁头数（必须是2）
         DD      0                ; 不使用分区，必须是0
         DD      2880             ; 重写一次磁盘大小
-
-        DB      0x00             ; 中断13的驱动器号
+BootDrive:
+        DB      0xFF             ; 中断13的驱动器号
         DB      0x00             ; Windows NT 会使用，否则保留
         DB      0x29             ; 扩展引导标记，必须是 0x28 或者 0x29
         DD      0x00             ; 卷系列号
@@ -52,12 +52,20 @@ Entry:
         MOV     DS, AX
         MOV     SP, 0xD00       ; This address (0x500 - 0x7BFF) is available from the memory map
 
+        ; Usually when BIOS jump to 0x7c00, DL is set to drive number.
+        ; See https://wiki.osdev.org/MBR_(x86) for details.
+        ; But we would like to check if we've already specified a valid number in [BootDrive].
+        CMP     BYTE [BootDrive], 0xFF
+        JNE     UseGivenDrive
+        MOV     BYTE [BootDrive], DL
+
+UseGivenDrive:
         ; 读取 FAT12 的 FAT表 和 根目录
 
         ; 检查 INT13h 扩展是否支持
         MOV     AH, 0x41
         MOV     BX, 0x55aa
-        MOV     DL, 0x80
+        MOV     DL, [BootDrive]
         INT     0x13
 
         JNC     LBASupported
@@ -82,7 +90,7 @@ LBASupported:
 
         MOV     SI, DataPack    ; address of "disk address packet"
         MOV     AH, 0x42        ; AL is unused
-        MOV     DL, 0x80        ; drive number 0 (OR the drive # with 0x80)
+        MOV     DL, [BootDrive] ; drive number
         INT     0x13
 
         ; TODO: 检查实际读取的扇区数量
@@ -184,7 +192,7 @@ ReadCluster:
 
         MOV     SI, DataPack            ; address of "disk address packet"
         MOV     AH, 0x42                ; AL is unused
-        MOV     DL, 0x80                ; drive number 0 (OR the drive # with 0x80)
+        MOV     DL, [BootDrive]         ; drive number
         INT     0x13
         ; TODO: 校验是否读取成功
 
