@@ -47,4 +47,8 @@ typedef unsigned char       UINT8, * PUINT8;
 typedef unsigned short      UINT16, * PUINT16;
 typedef unsigned int        UINT32, * PUINT32;
 
+_Static_assert(sizeof(char)  == 1, "Size of char is not 1");
+_Static_assert(sizeof(short) == 2, "Size of short is not 2");
+_Static_assert(sizeof(int)   == 4, "Size of int is not 4");
+
 #endif // _DATA_TYPE_H_
