@@ -67,10 +67,9 @@ int PaintChar(int cx, int cy, int ch, int size, int r, int g, int b)
                     unsigned char *PixelAddr = ScrnBuffer + BytesPerPixel * ((cy + i * size + y) * VbeModeInfo.width + (cx + j * size + x));
                     int pxFont = *(FontContent + PixelOffset);
                     
-                    *(PixelAddr + BlueOffset) = (*(PixelAddr + 0) * pxFont + b * (255 - pxFont)) / 255;
-                    *(PixelAddr + GreenOffset) = (*(PixelAddr + 1) * pxFont + g * (255 - pxFont)) / 255;
-                    *(PixelAddr + RedOffset) = (*(PixelAddr + 2) * pxFont + r * (255 - pxFont)) / 255;
-                    
+                    *(PixelAddr + BlueOffset)  = (*(PixelAddr + BlueOffset)  * pxFont + b * (255 - pxFont)) / 255;
+                    *(PixelAddr + GreenOffset) = (*(PixelAddr + GreenOffset) * pxFont + g * (255 - pxFont)) / 255;
+                    *(PixelAddr + RedOffset)   = (*(PixelAddr + RedOffset)   * pxFont + r * (255 - pxFont)) / 255;
                 }
             }
             PixelOffset++;
