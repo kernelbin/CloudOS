@@ -32,12 +32,12 @@ typedef struct _VBE_MODE_INFO_STRUCTURE {
 	uint8_t image_pages;
 	uint8_t reserved0;
  
-	uint8_t red_mask;
-	uint8_t red_position;
-	uint8_t green_mask;
-	uint8_t green_position;
-	uint8_t blue_mask;
-	uint8_t blue_position;
+	uint8_t red_mask;       // size of direct color mask in bits
+	uint8_t red_position;   // bit position (least significant bit)
+	uint8_t green_mask;     // same above
+	uint8_t green_position; // same above
+	uint8_t blue_mask;      // same above
+	uint8_t blue_position;  // same above
 	uint8_t reserved_mask;
 	uint8_t reserved_position;
 	uint8_t direct_color_attributes;

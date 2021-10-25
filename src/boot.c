@@ -18,14 +18,19 @@ void PaintDesktop()
 {
     char *ScrnBuffer = (char *)VbeModeInfo.framebuffer;
 
+    int BytesPerPixel = (VbeModeInfo.bpp >> 3);
+    int RedOffset =     (VbeModeInfo.red_position >> 3);
+    int GreenOffset =   (VbeModeInfo.green_position >> 3);
+    int BlueOffset =    (VbeModeInfo.blue_position >> 3);
+
     for(int i = 0; i < VbeModeInfo.height; i++)
     {
         for(int j = 0; j < VbeModeInfo.width; j++)
         {
-            char *PixelAddr = ScrnBuffer + 3 * (i * VbeModeInfo.width + j);
-            *(PixelAddr + 0) = 158 * ((double) j / (double) VbeModeInfo.width) + 20;
-            *(PixelAddr + 1) = -138 * ((double) i / (double) VbeModeInfo.height) + 180;
-            *(PixelAddr + 2) = (-40 * ((double) j / (double) VbeModeInfo.width) + 60) + 50 * ((double) i / (double) VbeModeInfo.height) -45;
+            char *PixelAddr = ScrnBuffer + BytesPerPixel * (i * VbeModeInfo.width + j);
+            *(PixelAddr + BlueOffset) = 158 * ((double) j / (double) VbeModeInfo.width) + 20;
+            *(PixelAddr + GreenOffset) = -138 * ((double) i / (double) VbeModeInfo.height) + 180;
+            *(PixelAddr + RedOffset) = (-40 * ((double) j / (double) VbeModeInfo.width) + 60) + 50 * ((double) i / (double) VbeModeInfo.height) -45;
         }
     }
 }

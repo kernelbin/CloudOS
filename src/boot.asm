@@ -65,10 +65,18 @@ VESA_VIDEO_MODE EQU 0x118
         CMP     AX, 0x004f
         JNE     VBENotAvailable
 
-        ; Check color depth
-        CMP     BYTE [VbeModeInfo + VBE_MODE_INFO.bpp], 24
+        ; Check memory model. Must be direct color (0x06).
+        CMP     BYTE [VbeModeInfo + VBE_MODE_INFO.memory_model], 0x06
         JNE     VBENotAvailable
 
+        ; Check color depth. Must be 24 / 32
+        CMP     BYTE [VbeModeInfo + VBE_MODE_INFO.bpp], 24
+        JE      ColorDepthOK
+        CMP     BYTE [VbeModeInfo + VBE_MODE_INFO.bpp], 32
+        JE      ColorDepthOK
+        JMP     VBENotAvailable
+
+ColorDepthOK:
         ; Select this mode
         MOV     BX ,VESA_VIDEO_MODE | 0x4000 ; If mode makes use of a linear framebuffer, should OR the mode number with 0x4000.
         MOV     AX ,0x4f02

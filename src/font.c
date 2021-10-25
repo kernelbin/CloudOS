@@ -51,6 +51,11 @@ int PaintChar(int cx, int cy, int ch, int size, int r, int g, int b)
     FontContent += sizeof(FONTHEADER) + CharOffset[ch];
 
     unsigned char *ScrnBuffer = (unsigned char *)VbeModeInfo.framebuffer;
+    int BytesPerPixel = (VbeModeInfo.bpp >> 3);
+    int RedOffset =     (VbeModeInfo.red_position >> 3);
+    int GreenOffset =   (VbeModeInfo.green_position >> 3);
+    int BlueOffset =    (VbeModeInfo.blue_position >> 3);
+
     for (int i = 0; i < FontFileAddr->fontHeight; i++)
     {
         for (int j = 0; j < FontFileAddr->chWidth[ch]; j++)
@@ -59,12 +64,12 @@ int PaintChar(int cx, int cy, int ch, int size, int r, int g, int b)
             {
                 for(int x = 0; x < size; x++)
                 {
-                    unsigned char *PixelAddr = ScrnBuffer + 3 * ((cy + i * size + y) * VbeModeInfo.width + (cx + j * size + x));
+                    unsigned char *PixelAddr = ScrnBuffer + BytesPerPixel * ((cy + i * size + y) * VbeModeInfo.width + (cx + j * size + x));
                     int pxFont = *(FontContent + PixelOffset);
                     
-                    *(PixelAddr + 0) = (*(PixelAddr + 0) * pxFont + b * (255 - pxFont)) / 255;
-                    *(PixelAddr + 1) = (*(PixelAddr + 1) * pxFont + g * (255 - pxFont)) / 255;
-                    *(PixelAddr + 2) = (*(PixelAddr + 2) * pxFont + r * (255 - pxFont)) / 255;
+                    *(PixelAddr + BlueOffset) = (*(PixelAddr + 0) * pxFont + b * (255 - pxFont)) / 255;
+                    *(PixelAddr + GreenOffset) = (*(PixelAddr + 1) * pxFont + g * (255 - pxFont)) / 255;
+                    *(PixelAddr + RedOffset) = (*(PixelAddr + 2) * pxFont + r * (255 - pxFont)) / 255;
                     
                 }
             }
