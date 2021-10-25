@@ -8,12 +8,12 @@
 #ifndef _FONT_H_
 #define _FONT_H_
 
-#include <stdint.h>
+#include "DataType.h"
 
 typedef struct
 {
-    uint8_t fontHeight;
-    uint8_t chWidth[128];
+    UINT8   fontHeight;
+    UINT8   chWidth[128];
 } FONTHEADER;
 
 void PrepareFont();

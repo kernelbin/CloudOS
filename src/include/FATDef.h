@@ -7,41 +7,40 @@
 #ifndef _FATDEF_H_
 #define _FATDEF_H_
 
-#include <stdint.h>
+#include "DataType.h"
 
 typedef struct _FAT_BPB
 {
-    uint8_t     BootJmp[3];
-    char        OEMName[8];
-    uint16_t    BytesPerSector;
-    uint8_t     SectorsPerCluster;
-    uint16_t    ReservedSectorCount;
-    uint8_t     TableCount;
-    uint16_t    RootEntryCount;
-    uint16_t    TotalSectors16;
-    uint8_t     MediaType;
-    uint16_t    TableSize;
-    uint16_t    SectorsPerTrack;
-    uint16_t    HeadSideCount;
-    uint32_t    HiddenSectorCount;
-    uint32_t    TotalSectors32;
- 
+    BYTE    BootJmp[3];
+    CHAR    OEMName[8];
+    UINT16  BytesPerSector;
+    BYTE    SectorsPerCluster;
+    UINT16  ReservedSectorCount;
+    BYTE    TableCount;
+    UINT16  RootEntryCount;
+    UINT16  TotalSectors16;
+    UINT8   MediaType;
+    UINT16  TableSize;
+    UINT16  SectorsPerTrack;
+    UINT16  HeadSideCount;
+    UINT32  HiddenSectorCount;
+    UINT32  TotalSectors32;
 }__attribute__((packed)) FAT_BPB, * PFAT_BPB;
 
 typedef struct _FAT_DIRENTRY
 {
-    char        FileName[11];   /* Filename + extension */
-    uint8_t     Attr;           /* File attributes */
-    uint8_t     ReservedNT;     /* Reserved for use by Windows NT */
-    uint8_t     TimeInTenths;   /* Millisecond stamp at file creation */
-    uint16_t    CreateTime;     /* Time file was created */
-    uint16_t    CreateDate;     /* Date file was created */
-    uint16_t    LastAccessDate; /* Date file was last accessed */
-    uint16_t    ClusterHigh;    /* High word of this entry's start cluster */
-    uint16_t    Time;           /* Time last modified */
-    uint16_t    Date;           /* Date last modified */
-    uint16_t    ClusterLow;     /* First cluster number low word */
-    uint32_t    Size;           /* File size */
+    CHAR    FileName[11];   /* Filename + extension */
+    BYTE    Attr;           /* File attributes */
+    BYTE    ReservedNT;     /* Reserved for use by Windows NT */
+    BYTE    TimeInTenths;   /* Millisecond stamp at file creation */
+    WORD    CreateTime;     /* Time file was created */
+    WORD    CreateDate;     /* Date file was created */
+    WORD    LastAccessDate; /* Date file was last accessed */
+    WORD    ClusterHigh;    /* High word of this entry's start cluster */
+    WORD    Time;           /* Time last modified */
+    WORD    Date;           /* Date last modified */
+    WORD    ClusterLow;     /* First cluster number low word */
+    UINT32  Size;           /* File size */
 }__attribute__((packed)) FAT_DIRENTRY, * PFAT_DIRENTRY;
 
 
