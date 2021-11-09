@@ -16,7 +16,7 @@ uint8_t * FAT_TableDirAddr;
 
 PFAT_DIRENTRY pRootDirList;
 
-void InitFAT12Helper()
+VOID InitFAT12Helper()
 {
     FAT_TableDirAddr = (unsigned char *)pBPB + pBPB->ReservedSectorCount * pBPB->BytesPerSector;
     pRootDirList = (PFAT_DIRENTRY)
@@ -27,9 +27,9 @@ void InitFAT12Helper()
 }
 
 
-static int ATAWaitBSY()   // Wait for BSY to be 0. If ERR or DF is set fater BSY is clear, return 0. otherwise 1.
+static BOOL ATAWaitBSY()   // Wait for BSY to be 0. If ERR or DF is set fater BSY is clear, return FALSE. otherwise TRUE.
 {
-    unsigned char Stat;
+    BYTE Stat;
     do
     {
         Stat = IO_InByte(0x1F7);
@@ -37,13 +37,13 @@ static int ATAWaitBSY()   // Wait for BSY to be 0. If ERR or DF is set fater BSY
     while (Stat & ATA_STATUS_BSY);
     
     if (Stat & (ATA_STATUS_ERR | ATA_STATUS_DF))
-        return 0;
-    return 1;
+        return FALSE;
+    return TRUE;
 }
 
-static int ATAWaitDRQ()  //Wait fot DRQ to be 1. If ERR or DF is set fater DRQ is set, return 0. otherwise 1.
+static BOOL ATAWaitDRQ()  //Wait fot DRQ to be 1. If ERR or DF is set fater DRQ is set, return FALSE. otherwise TRUE.
 {
-    unsigned char Stat;
+    BYTE Stat;
     do
     {
         Stat = IO_InByte(0x1F7);
@@ -51,11 +51,11 @@ static int ATAWaitDRQ()  //Wait fot DRQ to be 1. If ERR or DF is set fater DRQ i
     while (!(Stat & ATA_STATUS_RDY));
     
     if (Stat & (ATA_STATUS_ERR | ATA_STATUS_DF))
-        return 0;
-    return 1;
+        return FALSE;
+    return TRUE;
 }
 
-int ATAReadSectors(int LBA, int SectorCount, unsigned char *Buffer, int MaxReadSize)
+BOOL ATAReadSectors(int LBA, int SectorCount, unsigned char *Buffer, int MaxReadSize)
 {
     // using ATA PIO mode to read disk
     // see https://wiki.osdev.org/ATA_PIO_Mode#x86_Directions for more details.
@@ -71,7 +71,7 @@ int ATAReadSectors(int LBA, int SectorCount, unsigned char *Buffer, int MaxReadS
     
     LBA += LBA2SectorOffset;
 
-    if (!ATAWaitBSY()) return 0;
+    if (!ATAWaitBSY()) return FALSE;
 
     IO_OutByte(0x1F6, 0xE0 | ((LBA >> 24) & 0xF));
     IO_OutByte(0x1F2, SectorCount);
@@ -82,8 +82,8 @@ int ATAReadSectors(int LBA, int SectorCount, unsigned char *Buffer, int MaxReadS
 
     for (int j = 0; j < SectorCount; j++)
     {
-        if (!ATAWaitBSY()) return 0;
-        if (!ATAWaitDRQ()) return 0;
+        if (!ATAWaitBSY()) return FALSE;
+        if (!ATAWaitDRQ()) return FALSE;
 
         for (unsigned int i = 0; i < pBPB->BytesPerSector / sizeof(uint16_t); i++)
         {
@@ -107,10 +107,10 @@ int ATAReadSectors(int LBA, int SectorCount, unsigned char *Buffer, int MaxReadS
         Buffer += pBPB->BytesPerSector;
     }
 
-    return 1;
+    return TRUE;
 }
 
-int FAT12ReadRootDirFile(char FileName[], unsigned char *Buffer, unsigned int BufferSize)
+BOOL FAT12ReadRootDirFile(LPCSTR FileName, PBYTE Buffer, UINT BufferSize)
 {
     // currently, only support 8.3 short file name.
 
@@ -130,7 +130,7 @@ int FAT12ReadRootDirFile(char FileName[], unsigned char *Buffer, unsigned int Bu
 
     if (FileNameLen > 12) // definitely too long
     {
-        return 0;
+        return FALSE;
     }
     if (LastDotPos == -1)
     {
@@ -140,7 +140,7 @@ int FAT12ReadRootDirFile(char FileName[], unsigned char *Buffer, unsigned int Bu
     if (LastDotPos > 8 || FileNameLen - (LastDotPos + 1) > 3)
     {
         // file name or ext too long.
-        return 0;
+        return FALSE;
     }
 
     // copy filename and ext.
@@ -155,12 +155,12 @@ int FAT12ReadRootDirFile(char FileName[], unsigned char *Buffer, unsigned int Bu
 
     for(int i = 0; i < pBPB->RootEntryCount; i++)
     {
-        int bAllSame = 1;
+        BOOL bAllSame = TRUE;
         for(int len = 0; len < 11; len++)
         {
             if (pRootDirList[i].FileName[len] != CompareFileName[len])
             {
-                bAllSame = 0;
+                bAllSame = FALSE;
                 break;
             }
         }
@@ -171,7 +171,7 @@ int FAT12ReadRootDirFile(char FileName[], unsigned char *Buffer, unsigned int Bu
             if(pRootDirList[i].Size > BufferSize)
             {
                 // Buffer too small
-                return 0;
+                return FALSE;
             }
 
             int UnreadSize = pRootDirList[i].Size;
@@ -187,7 +187,7 @@ int FAT12ReadRootDirFile(char FileName[], unsigned char *Buffer, unsigned int Bu
                     MIN(UnreadSize, pBPB->SectorsPerCluster * pBPB->BytesPerSector));
 
                 if (!Result)
-                    return 0;
+                    return FALSE;
 
                 Buffer += pBPB->SectorsPerCluster * pBPB->BytesPerSector;
                 UnreadSize -= pBPB->SectorsPerCluster * pBPB->BytesPerSector;
@@ -204,14 +204,14 @@ int FAT12ReadRootDirFile(char FileName[], unsigned char *Buffer, unsigned int Bu
             if (Cluster >= 0xFF8 && Cluster <= 0xFFF)
             {
                 // Last Cluster. Successfull read entire file.
-                return 1;
+                return TRUE;
             }
             // Bad cluster, reserved cluster, or whatever... we've already failed.
-            return 0;
+            return FALSE;
         }
         // continue searching
     }
 
     // all searched, non match.
-    return 0;
+    return FALSE;
 }

@@ -44,8 +44,8 @@ typedef struct _FAT_DIRENTRY
 }__attribute__((packed)) FAT_DIRENTRY, * PFAT_DIRENTRY;
 
 
-void InitFAT12Helper();
+VOID InitFAT12Helper();
 
-int FAT12ReadRootDirFile(char FileName[], unsigned char *Buffer, unsigned int BufferSize);
+BOOL FAT12ReadRootDirFile(LPCSTR FileName, PBYTE Buffer, UINT BufferSize);
 
 #endif // _FATDEF_H_
