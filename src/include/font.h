@@ -16,10 +16,10 @@ typedef struct
     UINT8   chWidth[128];
 } FONTHEADER;
 
-void PrepareFont();
-int GetCharWidth(int ch, int size);
-int GetFontHeight(int size);
-int PaintChar(int cx, int cy, int ch, int size, int r, int g, int b);
-int PrintString(int cx, int cy, char str[], int size, int r, int g, int b);
+VOID PrepareFont();
+INT GetCharWidth(CHAR ch, INT size);
+INT GetFontHeight(INT size);
+BOOL PaintChar(INT cx, INT cy, CHAR ch, INT size, BYTE r, BYTE g, BYTE b);
+BOOL PrintString(INT cx, INT cy, LPCSTR str, INT size, BYTE r, BYTE g, BYTE b);
 
 #endif // _FONT_H_

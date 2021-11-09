@@ -14,43 +14,43 @@
 extern FONTHEADER* FontFileAddr;
 extern VBE_MODE_INFO_STRUCTURE VbeModeInfo;
 
-static int CharOffset[_countof(FontFileAddr->chWidth)];
+static INT CharOffset[_countof(FontFileAddr->chWidth)];
 
-void PrepareFont()
+VOID PrepareFont()
 {
     // calculate the offset of each char
 
     CharOffset[0] = 0;
-    for(uint32_t i = 1; i < _countof(FontFileAddr->chWidth); i++)
+    for(UINT i = 1; i < _countof(FontFileAddr->chWidth); i++)
     {
         CharOffset[i] = CharOffset[i - 1] + FontFileAddr->chWidth[i - 1] * FontFileAddr->fontHeight;
     }
 }
 
-int GetCharWidth(int ch, int size)
+INT GetCharWidth(CHAR ch, INT size)
 {
-    return FontFileAddr->chWidth[ch] * size;
+    return FontFileAddr->chWidth[(UINT)ch] * size;
 }
 
-int GetFontHeight(int size)
+INT GetFontHeight(INT size)
 {
     return FontFileAddr->fontHeight * size;
 }
 
-int PaintChar(int cx, int cy, int ch, int size, int r, int g, int b)
+BOOL PaintChar(INT cx, INT cy, CHAR ch, INT size, BYTE r, BYTE g, BYTE b)
 {
     // TODO: This function is directly reading from video memory, which could be VERY SLOW.
     // Use double buffering instead.
 
     // TODO: boundary checking is missing.
 
-    if (ch > (int)_countof(FontFileAddr->chWidth)) return 0;
+    if ((UINT)ch > (int)_countof(FontFileAddr->chWidth)) return 0;
 
     int PixelOffset = 0;
-    unsigned char *FontContent = (unsigned char *)FontFileAddr;
-    FontContent += sizeof(FONTHEADER) + CharOffset[ch];
+    PBYTE FontContent = (unsigned char *)FontFileAddr;
+    FontContent += sizeof(FONTHEADER) + CharOffset[(UINT)ch];
 
-    unsigned char *ScrnBuffer = (unsigned char *)VbeModeInfo.framebuffer;
+    PBYTE ScrnBuffer = (unsigned char *)VbeModeInfo.framebuffer;
     int BytesPerPixel = (VbeModeInfo.bpp >> 3);
     int RedOffset =     (VbeModeInfo.red_position >> 3);
     int GreenOffset =   (VbeModeInfo.green_position >> 3);
@@ -58,7 +58,7 @@ int PaintChar(int cx, int cy, int ch, int size, int r, int g, int b)
 
     for (int i = 0; i < FontFileAddr->fontHeight; i++)
     {
-        for (int j = 0; j < FontFileAddr->chWidth[ch]; j++)
+        for (int j = 0; j < FontFileAddr->chWidth[(UINT)ch]; j++)
         {
             for (int y = 0; y < size; y++)
             {
@@ -75,17 +75,17 @@ int PaintChar(int cx, int cy, int ch, int size, int r, int g, int b)
             PixelOffset++;
         }
     }
-    return  0;
+    return TRUE;
 }
 
-int PrintString(int cx, int cy, char str[], int size, int r, int g, int b)
+BOOL PrintString(INT cx, INT cy, LPCSTR str, INT size, BYTE r, BYTE g, BYTE b)
 {
     // TODO: boundary checking is missing.
     
     for(int i = 0; str[i]; i++)
     {
-        PaintChar(cx, cy, str[i], size, r, g, b);
+        if (!PaintChar(cx, cy, str[i], size, r, g, b)) return FALSE;
         cx += GetCharWidth(str[i], size) + size / 2;
     }
-    return 0;
+    return TRUE;
 }

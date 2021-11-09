@@ -11,7 +11,7 @@
 #ifndef _MEM_LAYOUT_H_
 #define _MEM_LAYOUT_H_
 
- typedef struct _MemLayoutEntry {
+typedef struct _MemLayoutEntry {
  
     uint32_t BaseL; // base address uint64_t
     uint32_t BaseH;
