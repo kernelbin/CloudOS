@@ -7,12 +7,13 @@
 #define _STRING_FORMAT_H_
 
 #include <stdarg.h>
+#include "DataType.h"
 
 #define TYPE_INT 1
 #define TYPE_STR 2
 #define TYPE_PTR 3
 
-int VStringFormat(char Buffer[], int BufSize, int cnt, va_list ValList);
-int StringFormat(char Buffer[], int BufSize, int cnt, ...);
+INT VStringFormat(LPSTR Buffer, INT BufSize, UINT cnt, va_list ValList);
+INT StringFormat(LPSTR Buffer, INT BufSize, UINT cnt, ...);
 
 #endif // _STRING_FORMAT_H_

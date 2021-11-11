@@ -4,6 +4,8 @@
  *
  */
 
+// Attention, the data types defined here all assume target architecture is 32bit.
+
 #ifndef _DATA_TYPE_H_
 #define _DATA_TYPE_H_
 
@@ -50,11 +52,15 @@ typedef unsigned int        UINT32, * PUINT32;
 typedef CHAR                *LPSTR, * PSTR;
 typedef CONST CHAR          *LPCSTR, * PCSTR;
 
+_Static_assert(sizeof(char) == 1, "Size of char is not 1.");
+_Static_assert(sizeof(short) == 2, "Size of short is not 2.");
+_Static_assert(sizeof(int) == 4, "Size of int is not 4.");
+
 #define FALSE               0
 #define TRUE                1
 
-_Static_assert(sizeof(char)  == 1, "Size of char is not 1");
-_Static_assert(sizeof(short) == 2, "Size of short is not 2");
-_Static_assert(sizeof(int)   == 4, "Size of int is not 4");
+typedef UINT                INT_PTR;
+
+_Static_assert(sizeof(INT_PTR) == sizeof(LPVOID), "Size of INT_PTR is wrong.");
 
 #endif // _DATA_TYPE_H_

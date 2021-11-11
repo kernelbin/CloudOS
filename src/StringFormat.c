@@ -1,7 +1,7 @@
 #include <stdarg.h>
 #include "StringFormat.h"
 
-char HexToChar(int Hex)
+static CHAR HexToChar(INT Hex)
 {
     if (Hex < 10)
     {
@@ -10,27 +10,27 @@ char HexToChar(int Hex)
     return Hex - 10 + 'A';
 }
 
-int VStringFormat(char Buffer[], int BufSize, int cnt, va_list ValList)
+INT VStringFormat(LPSTR Buffer, INT BufSize, UINT cnt, va_list ValList)
 {
     if (Buffer)
     {
         // verify if the size is enough
-        int RequiredSize = VStringFormat(0, 0, cnt, ValList);
+        INT RequiredSize = VStringFormat(0, 0, cnt, ValList);
         if (RequiredSize == -1) return -1;
         if (RequiredSize > BufSize)
         {
             return 0;
         }
     }
-    int cchLength = 0;
-    for (int i = 0; i < cnt; i++)
+    INT cchLength = 0;
+    for (UINT i = 0; i < cnt; i++)
     {
-        int Type = va_arg(ValList, int);
+        INT Type = va_arg(ValList, INT);
         switch (Type)
         {
             case TYPE_INT:
             {
-                int Num = va_arg(ValList, int);
+                INT Num = va_arg(ValList, INT);
                 if (Num < 0)
                 {
                     Num = -Num;
@@ -40,8 +40,8 @@ int VStringFormat(char Buffer[], int BufSize, int cnt, va_list ValList)
                     }
                     cchLength++;
                 }
-                int sp = 0;
-                char Stack[10]; // at most 10 digit (demical) for int
+                INT sp = 0;
+                CHAR Stack[10]; // at most 10 digit (demical) for int
 
                 do
                 {
@@ -61,8 +61,8 @@ int VStringFormat(char Buffer[], int BufSize, int cnt, va_list ValList)
             }
             case TYPE_STR:
             {
-                char* Str = va_arg(ValList, char*);
-                for (int i = 0; Str[i]; i++)
+                LPCSTR Str = va_arg(ValList, LPCSTR);
+                for (UINT i = 0; Str[i]; i++)
                 {
                     if (Buffer)
                     {
@@ -74,7 +74,7 @@ int VStringFormat(char Buffer[], int BufSize, int cnt, va_list ValList)
             }
             case TYPE_PTR:
             {
-                unsigned int PtrInt = va_arg(ValList, unsigned int);
+                INT_PTR PtrInt = va_arg(ValList, INT_PTR);
 
                 if (Buffer)
                 {
@@ -82,7 +82,7 @@ int VStringFormat(char Buffer[], int BufSize, int cnt, va_list ValList)
                     Buffer[cchLength + 1] = 'x';
                 }
                 cchLength += 2;
-                for(int i = 0; i < 8; i++)
+                for(UINT i = 0; i < sizeof(INT_PTR) * 2; i++)
                 {
                     if(Buffer)
                     {
@@ -102,12 +102,12 @@ int VStringFormat(char Buffer[], int BufSize, int cnt, va_list ValList)
     return cchLength;
 }
 
-int StringFormat(char Buffer[], int BufSize, int cnt, ...)
+INT StringFormat(LPSTR Buffer, INT BufSize, UINT cnt, ...)
 {
     va_list ValList;
     va_start(ValList, cnt);
 
-    int iRet = VStringFormat(Buffer, BufSize, cnt, ValList);
+    INT iRet = VStringFormat(Buffer, BufSize, cnt, ValList);
     
     va_end(ValList);
     return iRet;
