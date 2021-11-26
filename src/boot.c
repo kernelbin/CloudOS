@@ -14,20 +14,20 @@
 extern VBE_MODE_INFO_STRUCTURE VbeModeInfo;
 
 // Paint a "Desktop" for fun.
-void PaintDesktop()
+VOID PaintDesktop()
 {
-    char *ScrnBuffer = (char *)VbeModeInfo.framebuffer;
+    PBYTE ScrnBuffer = (PBYTE)VbeModeInfo.framebuffer;
 
-    int BytesPerPixel = (VbeModeInfo.bpp >> 3);
-    int RedOffset =     (VbeModeInfo.red_position >> 3);
-    int GreenOffset =   (VbeModeInfo.green_position >> 3);
-    int BlueOffset =    (VbeModeInfo.blue_position >> 3);
+    UINT BytesPerPixel = (VbeModeInfo.bpp >> 3);
+    UINT RedOffset =     (VbeModeInfo.red_position >> 3);
+    UINT GreenOffset =   (VbeModeInfo.green_position >> 3);
+    UINT BlueOffset =    (VbeModeInfo.blue_position >> 3);
 
-    for(int i = 0; i < VbeModeInfo.height; i++)
+    for(INT i = 0; i < VbeModeInfo.height; i++)
     {
-        for(int j = 0; j < VbeModeInfo.width; j++)
+        for(INT j = 0; j < VbeModeInfo.width; j++)
         {
-            char *PixelAddr = ScrnBuffer + BytesPerPixel * (i * VbeModeInfo.width + j);
+            PBYTE PixelAddr = ScrnBuffer + BytesPerPixel * (i * VbeModeInfo.width + j);
             *(PixelAddr + BlueOffset) = 158 * ((double) j / (double) VbeModeInfo.width) + 20;
             *(PixelAddr + GreenOffset) = -138 * ((double) i / (double) VbeModeInfo.height) + 180;
             *(PixelAddr + RedOffset) = (-40 * ((double) j / (double) VbeModeInfo.width) + 60) + 50 * ((double) i / (double) VbeModeInfo.height) -45;
@@ -35,21 +35,21 @@ void PaintDesktop()
     }
 }
 
-int CloudMain()
+INT CloudMain()
 {
     PaintDesktop();
     PrepareFont();
 
     InitFAT12Helper();
 
-    unsigned char* Text = (unsigned char*)0x100000;
+    PBYTE Text = (PBYTE)0x100000;
 
     FAT12ReadRootDirFile("THEEND.TXT", Text, 8651);
 
     PrintString(23, 23, (char *)Text, 2, 0, 0, 0);
     PrintString(20, 20, (char *)Text, 2, 200, 200, 255);
 
-    char Buf[100] = { 0 };
+    CHAR Buf[100] = { 0 };
     StringFormat(Buf,
                  (sizeof(Buf)/sizeof(Buf[0])) - 1,
                  5,
@@ -62,7 +62,7 @@ int CloudMain()
     PrintString(23, 53, Buf, 3, 0, 0, 0);
     PrintString(20, 50, Buf, 3, 255, 255, 255);
 
-    int len = StringFormat(Buf,
+    INT len = StringFormat(Buf,
                 (sizeof(Buf)/sizeof(Buf[0])) - 1,
                 3,
                 TYPE_STR, "MemInfoEntryCnt = ",
@@ -72,9 +72,9 @@ int CloudMain()
     PrintString(23, 83, Buf, 3, 0, 0, 0);
     PrintString(20, 80, Buf, 3, 255, 255, 255);
 
-    for(int i = 0; i < MemInfoEntryCnt; i++)
+    for(INT i = 0; i < MemInfoEntryCnt; i++)
     {
-        int len = StringFormat(Buf,
+        INT len = StringFormat(Buf,
                 (sizeof(Buf)/sizeof(Buf[0])) - 1,
                 10,
                 TYPE_STR, "Base: ",

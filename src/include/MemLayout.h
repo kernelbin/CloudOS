@@ -3,6 +3,7 @@
  * Copyright (c) He yang 2021 (1160386205@qq.com)
  */
 
+#include "DataType.h"
 
 // Memory layout information is read in and stored using INT 0x15, EAX = 0xE820 assembly (code in boot.asm)
 // These structs are only for accessing it.
@@ -13,17 +14,17 @@
 
 typedef struct _MemLayoutEntry {
  
-    uint32_t BaseL; // base address uint64_t
-    uint32_t BaseH;
-    uint32_t LengthL; // length uint64_t
-    uint32_t LengthH;
-    uint32_t Type; // entry Type
-    uint32_t ACPI; // extended
+    UINT32 BaseL; // base address uint64_t
+    UINT32 BaseH;
+    UINT32 LengthL; // length uint64_t
+    UINT32 LengthH;
+    UINT32 Type; // entry Type
+    UINT32 ACPI; // extended
  
 }__attribute__((packed)) MEM_LAYOUT_ENTRY;
 
 
-extern int MemInfoEntryCnt;
+extern INT MemInfoEntryCnt;
 extern MEM_LAYOUT_ENTRY *MemInfoAddr;
 
 #endif //_MEM_LAYOUT_H_

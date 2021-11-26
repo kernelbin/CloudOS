@@ -46,26 +46,26 @@ BOOL PaintChar(INT cx, INT cy, CHAR ch, INT size, BYTE r, BYTE g, BYTE b)
 
     if ((UINT)ch > (int)_countof(FontFileAddr->chWidth)) return 0;
 
-    int PixelOffset = 0;
+    UINT PixelOffset = 0;
     PBYTE FontContent = (unsigned char *)FontFileAddr;
     FontContent += sizeof(FONTHEADER) + CharOffset[(UINT)ch];
 
     PBYTE ScrnBuffer = (unsigned char *)VbeModeInfo.framebuffer;
-    int BytesPerPixel = (VbeModeInfo.bpp >> 3);
-    int RedOffset =     (VbeModeInfo.red_position >> 3);
-    int GreenOffset =   (VbeModeInfo.green_position >> 3);
-    int BlueOffset =    (VbeModeInfo.blue_position >> 3);
+    UINT BytesPerPixel = (VbeModeInfo.bpp >> 3);
+    UINT RedOffset =     (VbeModeInfo.red_position >> 3);
+    UINT GreenOffset =   (VbeModeInfo.green_position >> 3);
+    UINT BlueOffset =    (VbeModeInfo.blue_position >> 3);
 
-    for (int i = 0; i < FontFileAddr->fontHeight; i++)
+    for (INT i = 0; i < FontFileAddr->fontHeight; i++)
     {
-        for (int j = 0; j < FontFileAddr->chWidth[(UINT)ch]; j++)
+        for (INT j = 0; j < FontFileAddr->chWidth[(UINT)ch]; j++)
         {
-            for (int y = 0; y < size; y++)
+            for (INT y = 0; y < size; y++)
             {
-                for(int x = 0; x < size; x++)
+                for(INT x = 0; x < size; x++)
                 {
-                    unsigned char *PixelAddr = ScrnBuffer + BytesPerPixel * ((cy + i * size + y) * VbeModeInfo.width + (cx + j * size + x));
-                    int pxFont = *(FontContent + PixelOffset);
+                    PBYTE PixelAddr = ScrnBuffer + BytesPerPixel * ((cy + i * size + y) * VbeModeInfo.width + (cx + j * size + x));
+                    INT pxFont = *(FontContent + PixelOffset);
                     
                     *(PixelAddr + BlueOffset)  = (*(PixelAddr + BlueOffset)  * pxFont + b * (255 - pxFont)) / 255;
                     *(PixelAddr + GreenOffset) = (*(PixelAddr + GreenOffset) * pxFont + g * (255 - pxFont)) / 255;
@@ -82,7 +82,7 @@ BOOL PrintString(INT cx, INT cy, LPCSTR str, INT size, BYTE r, BYTE g, BYTE b)
 {
     // TODO: boundary checking is missing.
     
-    for(int i = 0; str[i]; i++)
+    for(INT i = 0; str[i]; i++)
     {
         if (!PaintChar(cx, cy, str[i], size, r, g, b)) return FALSE;
         cx += GetCharWidth(str[i], size) + size / 2;

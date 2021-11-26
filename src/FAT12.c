@@ -55,11 +55,11 @@ static BOOL ATAWaitDRQ()  //Wait fot DRQ to be 1. If ERR or DF is set fater DRQ 
     return TRUE;
 }
 
-BOOL ATAReadSectors(int LBA, int SectorCount, unsigned char *Buffer, int MaxReadSize)
+static BOOL ATAReadSectors(INT LBA, INT SectorCount, PBYTE Buffer, INT MaxReadSize)
 {
     // using ATA PIO mode to read disk
     // see https://wiki.osdev.org/ATA_PIO_Mode#x86_Directions for more details.
-    static int LBA2SectorOffset = 0;
+    static INT LBA2SectorOffset = 0;
     if(LBA2SectorOffset == 0)
     {   
         LBA2SectorOffset = 
@@ -75,27 +75,27 @@ BOOL ATAReadSectors(int LBA, int SectorCount, unsigned char *Buffer, int MaxRead
 
     IO_OutByte(0x1F6, 0xE0 | ((LBA >> 24) & 0xF));
     IO_OutByte(0x1F2, SectorCount);
-    IO_OutByte(0x1F3, (uint8_t) LBA);
-    IO_OutByte(0x1F4, (uint8_t)(LBA >> 8));
-    IO_OutByte(0x1F5, (uint8_t)(LBA >> 16)); 
+    IO_OutByte(0x1F3, (UINT8)(LBA));
+    IO_OutByte(0x1F4, (UINT8)(LBA >> 8));
+    IO_OutByte(0x1F5, (UINT8)(LBA >> 16));
     IO_OutByte(0x1F7, 0x20); // Send the read command
 
-    for (int j = 0; j < SectorCount; j++)
+    for (INT j = 0; j < SectorCount; j++)
     {
         if (!ATAWaitBSY()) return FALSE;
         if (!ATAWaitDRQ()) return FALSE;
 
-        for (unsigned int i = 0; i < pBPB->BytesPerSector / sizeof(uint16_t); i++)
+        for (UINT i = 0; i < pBPB->BytesPerSector / sizeof(WORD); i++)
         {
             if (MaxReadSize >= 2)
             {
-                *((short *)(Buffer + i * 2)) = IO_InWord(0x1F0);
+                *((LPWORD)(Buffer + i * 2)) = IO_InWord(0x1F0);
                 MaxReadSize -= 2;
             }
             else if (MaxReadSize == 1)
             {
-                short ReadTmp = IO_InWord(0x1F0);
-                *((char *)(Buffer + i * 2))  = ReadTmp & 0xFF;
+                WORD ReadTmp = IO_InWord(0x1F0);
+                *((LPBYTE)(Buffer + i * 2))  = ReadTmp & 0xFF;
                 MaxReadSize -= 1;
             }
             else
@@ -115,9 +115,9 @@ BOOL FAT12ReadRootDirFile(LPCSTR FileName, PBYTE Buffer, UINT BufferSize)
     // currently, only support 8.3 short file name.
 
     // buildup a filename for searching.
-    char CompareFileName[12] = "           ";
+    CHAR CompareFileName[12] = "           ";
 
-    int LastDotPos = -1, FileNameLen;
+    INT LastDotPos = -1, FileNameLen;
 
     // max file name is 11 (including ext). if count the dot, it would be 12. loop until 13 to check if it's too long
     for (FileNameLen = 0; FileName[FileNameLen] && FileNameLen <= 13; FileNameLen++)
@@ -144,19 +144,19 @@ BOOL FAT12ReadRootDirFile(LPCSTR FileName, PBYTE Buffer, UINT BufferSize)
     }
 
     // copy filename and ext.
-    for(int i = 0; i < LastDotPos; i++)
+    for(INT i = 0; i < LastDotPos; i++)
     {
         CompareFileName[i] = FileName[i];
     }
-    for (int i = LastDotPos + 1; i < FileNameLen; i++)
+    for (INT i = LastDotPos + 1; i < FileNameLen; i++)
     {
         CompareFileName[i - LastDotPos - 1 + 8] = FileName[i];
     }
 
-    for(int i = 0; i < pBPB->RootEntryCount; i++)
+    for(INT i = 0; i < pBPB->RootEntryCount; i++)
     {
         BOOL bAllSame = TRUE;
-        for(int len = 0; len < 11; len++)
+        for(INT len = 0; len < 11; len++)
         {
             if (pRootDirList[i].FileName[len] != CompareFileName[len])
             {
@@ -174,12 +174,12 @@ BOOL FAT12ReadRootDirFile(LPCSTR FileName, PBYTE Buffer, UINT BufferSize)
                 return FALSE;
             }
 
-            int UnreadSize = pRootDirList[i].Size;
-            int Cluster = pRootDirList[i].ClusterLow;
+            INT UnreadSize = pRootDirList[i].Size;
+            INT Cluster = pRootDirList[i].ClusterLow;
 
             while (Cluster < 0xFF0 && Cluster > 0x01)
             {
-                int Result;
+                INT Result;
                 Result = ATAReadSectors(
                     Cluster,
                     pBPB->SectorsPerCluster,
@@ -191,7 +191,7 @@ BOOL FAT12ReadRootDirFile(LPCSTR FileName, PBYTE Buffer, UINT BufferSize)
 
                 Buffer += pBPB->SectorsPerCluster * pBPB->BytesPerSector;
                 UnreadSize -= pBPB->SectorsPerCluster * pBPB->BytesPerSector;
-                unsigned short *NextTableID = (unsigned short *)(FAT_TableDirAddr + Cluster + (Cluster >> 1));
+                LPWORD NextTableID = (LPWORD)(FAT_TableDirAddr + Cluster + (Cluster >> 1));
                 if(Cluster & 1)
                 {
                     Cluster = *(NextTableID) >> 4;
